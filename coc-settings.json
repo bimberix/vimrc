@@ -1,0 +1,17 @@
+{
+    "clangd.semanticHighlighting": true,
+    "python.jediEnabled": false,
+    "python.autoComplete.extraPaths": [
+    ],
+    "diagnostic.errorSign": "●",
+    "diagnostic.warningSign": "▲",
+    "diagnostic.infoSign": "■",
+    "diagnostic.hintSign": "◆",
+    "properties": {
+        "http.proxy": {
+            "type": "string",
+            "default": "",
+            "description": "http proxy uri, used for extensions that send request. Format: proxy-server:1234 or user:password@prox-server:1234 with auth support"
+        }
+    }
+}
