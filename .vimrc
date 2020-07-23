@@ -63,7 +63,7 @@ set cmdheight=1
 "
 " Having longer updatetime (default is 4000 ms = 4 s) leads to noticeable
 " delays and poor user experience.
-"set updatetime=300
+set updatetime=300
 "
 " Don't pass messages to |ins-completion-menu|.
 set shortmess+=c
@@ -87,16 +87,11 @@ endfunction
 
 function! LeftPaneNERDTree()
     call LeftPaneHideOther("nerdtree")
-    if exists("t:NERDTreeBufName") && bufwinnr(t:NERDTreeBufName) == -1
-        NERDTreeFocus
-    elseif exists("t:NERDTreeBufName")
+    if exists("t:NERDTreeBufName")
         NERDTreeToggle
     else
-        if filereadable(bufname())
-            NERDTreeFind
-        else
-            NERDTree
-        endif
+        silent NERDTreeMirror
+        NERDTreeFocus
     endif
     call lightline#update()
 endfunction
@@ -113,9 +108,7 @@ endfunction
 
 function! LeftPaneUndotree()
     call LeftPaneHideOther("undotree")
-    if exists("t:undotree") && t:undotree.IsVisible()
-        UndotreeToggle
-    elseif exists("t:undotree")
+    if exists("t:undotree")
         UndotreeToggle
     else
         UndotreeShow
@@ -129,6 +122,8 @@ tmap <silent> <F3> <C-w>:call LeftPaneTagbar()<CR>
 nmap <silent> <F4> :call LeftPaneUndotree()<CR>
 tmap <silent> <F4> <C-w>:call LeftPaneUndotree()<CR>
 
+autocmd tableave * call LeftPaneHideOther("")
+
 "terminal pane
 function! GetTerminalBufNr()
     for buf in range(1, bufnr('$'))
@@ -140,23 +135,32 @@ function! GetTerminalBufNr()
     return 0 
 endfunction
 
+function! HideBuf(buf)
+    if a:buf && bufwinnr(a:buf) != -1
+        exe bufwinnr(a:buf) . 'hide'
+        return 0
+    endif
+    return 1
+endfunction
+
 function! TerminalToggle()
     let term_bufnr = GetTerminalBufNr()
-    if term_bufnr && bufwinnr(term_bufnr) != -1
-        exe bufwinnr(term_bufnr) . 'hide'
-        return
+    if HideBuf(term_bufnr)
+        wincmd b 
+        if term_bufnr
+            silent exe 'split #' . term_bufnr
+        else
+            terminal
+        endif
+        resize 12
     endif
-    wincmd b 
-    if term_bufnr
-        exe 'split #' . term_bufnr
-    else
-        terminal
-    endif
-    resize 12
 endfunction
 
 nmap <silent> <F5> :call TerminalToggle()<CR>
 tmap <silent> <F5> <C-w>:call TerminalToggle()<CR>
+
+autocmd tableave * call HideBuf(GetTerminalBufNr()) 
+
 "terminal escape
 
 "tnoremap <C-C> <C-w>
@@ -240,7 +244,6 @@ filetype plugin on
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "LIGHTLINE
-
 let g:lightline = {
 \ 'active': {
 \   'left': [ [ 'mode', 'paste' ],
@@ -259,156 +262,145 @@ let g:lightline = {
 \    'right': [ [ 'close' ],
 \               [ 'cocstatus' ] ]
 \ },
+\ 'tab': {
+\   'active': ['tabnum', 'filename', 'readonly', 'modified'],
+\   'inactive': ['tabnum', 'filename', 'readonly', 'modified']
+\ },
 \ 'component' : {
-\    'align': '%<'
+\    'align': '%<',
 \ },
 \ 'component_function': {
-\   'gitbranch': 'LightlineFugitive',
-\   'readonly': 'LightlineReadonly',
-\   'mode': 'LightlineMode',
-\   'modified': 'LightlineModified',
-\   'filename': 'LightlineFilename',
+\   'gitbranch': 'Lightline_gitbranch',
+\   'readonly': 'Lightline_readonly',
+\   'mode': 'Lightline_mode',
+\   'modified': 'Lightline_modified',
+\   'filename': 'Lightline_filename',
 \   'cocstatus': 'coc#status',
-\   'fileformat': 'LightlineFileformat',
-\   'filetype': 'LightlineFiletype',
-\   'lineinfo': 'LightlineLineinfo',
-\   'percent': 'LightlinePercent',
-\   'fileencoding': 'LightlineEncoding',
+\   'fileformat': 'Lightline_fileformat',
+\   'filetype': 'Lightline_filetype',
+\   'lineinfo': 'Lightline_lineinfo',
+\   'percent': 'Lightline_percent',
+\   'fileencoding': 'Lightline_encoding'
+\ },
+\ 'tab_component_function': {
+\   'filename': 'Lightline_tab_filename', 'modified': 'Lightline_tab_modified',
+\   'readonly': 'Lightline_tab_readonly', 'tabnum': 'lightline#tab#tabnum'
 \ },
 "\ 'separator': { 'left': "\ue0b8", 'right': "\ue0ba" },
 "\ 'subseparator': { 'left': "\ue0b9", 'right': "\ue0bb" }
 \ }
-
-
-let g:lightlinefields = {
+let g:lightline_fields = {
 \ 'nerdtree' : {
-\   'gitbranch': 0,
-\   'readonly': 0,
-\   'mode': 0,
-\   'modified': 0,
-\   'filename': 0,
-\   'cocstatus': 0,
-\   'fileformat': 0,
-\   'filetype': 0,
-\   'lineinfo': 0,
-\   'percent': 0,
-\   'fileencoding': 0,
+\   'gitbranch': 1,
+\   'mode': 'EXPLORE',
 \  },
 \ 'tagbar' : {
-\   'gitbranch': 0,
-\   'readonly': 0,
-\   'mode': 0,
-\   'modified': 0,
-\   'filename': 0,
-\   'cocstatus': 0,
-\   'fileformat': 0,
-\   'filetype': 0,
-\   'lineinfo': 0,
-\   'percent': 0,
-\   'fileencoding': 0,
+\   'mode': 'TAGS',
 \  },
 \ 'undotree' : {
-\   'gitbranch': 0,
-\   'readonly': 0,
-\   'mode': 0,
-\   'modified': 0,
-\   'filename': 0,
-\   'cocstatus': 0,
-\   'fileformat': 0,
-\   'filetype': 0,
-\   'lineinfo': 0,
-\   'percent': 0,
-\   'fileencoding': 0,
+\   'mode': 'UNDO',
 \  },
 \ 'help' : {
-\   'gitbranch': 0,
-\   'readonly': 0,
-\   'mode': 0,
-\   'modified': 0,
-\   'filename': 0,
-\   'cocstatus': 0,
-\   'fileformat': 0,
-\   'filetype': 0,
-\   'lineinfo': 0,
-\   'percent': 0,
-\   'fileencoding': 0,
+\   'mode': 'HELP',
+\   'filename': 1,
+\   'lineinfo': 1,
+\   'percent': 1,
 \  },
 \ 'diff' : {
-\   'gitbranch': 0,
-\   'readonly': 0,
-\   'mode': 0,
-\   'modified': 0,
-\   'filename': 0,
-\   'cocstatus': 0,
-\   'fileformat': 0,
-\   'filetype': 0,
-\   'lineinfo': 0,
-\   'percent': 0,
-\   'fileencoding': 0,
+\   'mode': 'DIFF',
 \  },
 \ }
 
-function! s:lightline_field_disabled(field)
-    exe 'let fielddisabled = exists("g:lightlinefields.' . &ft . '.' . a:field . '") && !g:lightlinefields.' . &ft . '.' . a:field
-    return fielddisabled
+function! Lightline_field_enabled(field)
+    exe 'let section_exist = exists("g:lightline_fields.' . &ft . '")'
+    exe 'let field_enabled = exists("g:lightline_fields.' . &ft . '.' . a:field . '") && g:lightline_fields.' . &ft . '.' . a:field
+    return field_enabled || !section_exist
 endfunction
 
-function! LightlineEncoding()
-    return s:lightline_field_disabled("fileencoding") ? "" : &fenc !=# "" ? &fenc : &enc
+function! Lightline_get_field(field)
+    exe 'let field_enabled = exists("g:lightline_fields.' . &ft . '.' . a:field . '")'
+    if field_enabled
+        exe 'let field = g:lightline_fields.' . &ft . '.' . a:field
+        return field
+    else
+        return ""
 endfunction
 
-function! LightlinePercent()
-    return s:lightline_field_disabled("percent") ? "" : (100 * line('.') / line('$')) . '%' . " \u2263" 
+function! Lightline_encoding()
+    return !Lightline_field_enabled("fileencoding") ? "" : &fenc !=# "" ? &fenc : &enc
 endfunction
 
-function! LightlineLineinfo()
-    return s:lightline_field_disabled("lineinfo") ? "" : printf("%d\ue0a1 %d\ue0a3", line('.'), col('.'))
+function! Lightline_percent()
+    return !Lightline_field_enabled("percent") ? "" : printf("%2d%% \u2263", (100 * line('.') / line('$'))) 
 endfunction
 
-function! LightlineModified()
-	let mode=lightline#mode()
-	return mode ==? 'terminal' || s:lightline_field_disabled("modified") ? "" : &modified ? "\u2260" : &modifiable ? "" : "-"
+function! Lightline_lineinfo()
+    return !Lightline_field_enabled("lineinfo") ? "" : printf("%3d\ue0a1 %3d\ue0a3", line('.'), col('.'))
 endfunction
 
-function! LightlineReadonly()
-	return &readonly && !s:lightline_field_disabled("readonly") ? "\ue0a2" : ''
+function! Lightline_modified()
+    let mode=lightline#mode()
+    return mode ==? 'terminal' || !Lightline_field_enabled("modified") ? "" : &modified ? "\u2260" : &modifiable ? "" : "-"
 endfunction
 
-function! LightlineFugitive()
-    let path = bufname()
-    if !s:lightline_field_disabled("gitbranch") 
+function! Lightline_readonly()
+    return &readonly && Lightline_field_enabled("readonly") ? "\ue0a2" : ''
+endfunction
+
+function! Lightline_gitbranch()
+    if Lightline_field_enabled("gitbranch") 
         let branch = FugitiveHead()
         return branch !=# '' ? "\ue0a0 " . branch : ''
     endif
     return ""
 endfunction
 
-function! LightlineMode()
-    return expand('%:t') =~# '^__Tagbar__' ? 'TAGBAR':
-        \ expand('%:t') ==# 'ControlP' ? 'CtrlP' :
-        \ &filetype ==# 'nerdtree' ? 'EXPLORE' :
-        \ &filetype ==# 'undotree' ? 'UNDOTREE' :
-        \ &filetype ==# 'diff' ? 'DIFF' :
-        \ lightline#mode()
+function! Lightline_mode()
+    let mode = Lightline_get_field("mode")
+    return strlen(mode) ? mode : lightline#mode()
 endfunction
 
-function! LightlineFilename()
-    return s:lightline_field_disabled("filename") ? '' : expand('%:t')
+function! Lightline_filename()
+    return !Lightline_field_enabled("filename") ? '' : expand('%:t')
 endfunction
 
-function! LightlineFileformat()
-    return s:lightline_field_disabled("fileformat") ? '' :
+function! Lightline_fileformat()
+    return !Lightline_field_enabled("fileformat") ? '' :
         \ &fileformat ==# 'unix' ? 'Unix (LF)' :
         \ &fileformat ==# 'windows' ? 'Windows (CR LF)' :
         \ &fileformat
 endfunction
 
-function! LightlineFiletype()
-	return s:lightline_field_disabled("filetype") ? '' : &filetype
+function! Lightline_filetype()
+    return !Lightline_field_enabled("filetype") ? '' : &filetype
+endfunction
+
+function! Lightline_tab_file_bufnr(n)
+    let buflist = tabpagebuflist(a:n)
+    for buf in buflist
+        if filereadable(bufname(buf))
+            return buf 
+        endif
+    endfor
+    return buflist[tabpagewinnr(a:n) - 1]
+endfunction
+
+function! Lightline_tab_filename(n)
+    let buflist = tabpagebuflist(a:n)
+    let _ = expand('#'.Lightline_tab_file_bufnr(a:n).':t')
+  return _ !=# '' ? _ : '[No Name]'
+endfunction
+
+function! Lightline_tab_modified(n) abort
+    return getbufvar(Lightline_tab_file_bufnr(a:n), '&modified') ? "\u2260" : getbufvar(Lightline_tab_file_bufnr(a:n), '&modifiable') ? '' : '-'
+endfunction
+
+function! Lightline_tab_readonly(n) abort
+  return getbufvar(Lightline_tab_file_bufnr(a:n), '&readonly') ? "\ue0a2" : ''
 endfunction
 
 " Use auocmd to force lightline update.
-autocmd User CocStatusChange,CocDiagnosticChange call lightline#update()
+autocmd User CocStatusChinge,CocDiagnosticChange call lightline#update()
 
 set laststatus=2
 
@@ -416,19 +408,29 @@ set laststatus=2
 "SESSIONS
 
 function! SessionCloseUnrestorableBuffs()
-for buf in range(1, bufnr('$'))
-    let buffer_name = bufname(buf)
-        if buffer_name =~# '\v(NERD_tree_*|__Tagbar__.*|undotree_*|diffpanel_*)'
-            exe 'bw' . bufnr(buf)
-        endif
+    for buf in range(1, bufnr('$'))
+        let buffer_name = bufname(buf)
+            if buffer_name =~# '\v(NERD_tree_*|__Tagbar__.*|undotree_*|diffpanel_*)'
+                exe 'bw' . bufnr(buf)
+            endif
     endfor
 endfunction
+
+" Like bufdo but restore the current buffer.
+function! BufDo(command)
+  let currBuff=bufnr("%")
+  execute 'bufdo ' . a:command
+  execute 'buffer ' . currBuff
+endfunction
+com! -nargs=+ -complete=command Bufdo call BufDo(<q-args>)
 
 let s:sessionfile = getcwd() . '/session.vim'
 
 function! SessionLoad()
 	exe 'source ' . s:sessionfile
 endfunction
+
+autocmd sessionloadpost * call BufDo("if filereadable(bufname()) | call FugitiveDetect(bufname()) | endif")
 
 function! SessionExist()
 	return filereadable(s:sessionfile)
@@ -585,3 +587,4 @@ nnoremap <silent><nowait> <space>j  :<C-u>CocNext<CR>
 nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
 " Resume latest coc list.
 nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
+
