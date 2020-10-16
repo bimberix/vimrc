@@ -204,7 +204,7 @@ function! BufExplorerToggle2()
         call BottomPaneHideOther("bufexplorer")
         wincmd b
         BufExplorerHorizontalSplit
-        if bufnr != -1 && bufwinnr(bufnr) == -1
+        if !IsBufVisible(bufnr)
             silent exe 'split #' . bufnr
             call HideBuf(bufnr)
             BufExplorerHorizontalSplit
@@ -260,10 +260,10 @@ tmap <silent> <F6> <C-w>:call QuickFixToggle()<CR>
 "terminal pane
 function! TerminalToggle()
     let term_bufnr = GetBufNrByName('!/bin/bash')
-    if term_bufnr != -1 && !HideBuf(term_bufnr)
+    if !HideBuf(term_bufnr)
         call BottomPaneHideOther("terminal")
         wincmd b
-        if term_bufnr
+        if term_bufnr != -1
             silent exe 'split #' . term_bufnr
         else
             terminal
