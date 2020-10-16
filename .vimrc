@@ -7,9 +7,11 @@ endif
 call plug#begin('~/.vim/plugged')
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'majutsushi/tagbar'
-Plug 'jackguo380/vim-lsp-cxx-highlight'
+"Plug 'jackguo380/vim-lsp-cxx-highlight'
+Plug 'frazrepo/vim-rainbow'
 Plug 'mbbill/undotree'
 Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-dispatch'
 Plug 'airblade/vim-gitgutter'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
@@ -19,6 +21,11 @@ Plug 'preservim/nerdtree'
 Plug 'itchyny/lightline.vim'
 Plug 'NLKNguyen/papercolor-theme'
 Plug 'lifepillar/vim-gruvbox8'
+Plug 'mileszs/ack.vim'
+Plug 'jlanzarotta/bufexplorer'
+"Plug 'Shougo/unite.vim'
+"Plug 'jeetsukumaran/vim-buffergator'
+"Plug 'roblillack/vim-bufferlist'
 call plug#end()
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -36,7 +43,7 @@ set tabstop=4 softtabstop=4
 set shiftwidth=4
 set expandtab
 set smartindent
-set nowrap
+"set nowrap
 set smartcase
 set noswapfile
 if has("persistent_undo")
@@ -50,6 +57,7 @@ set mouse=nvi
 set backspace=indent,eol,start
 set clipboard=unnamed
 set clipboard=unnamedplus
+set makeprg=mymake
 
 " set fail if hidden is not set.
 set hidden
@@ -74,7 +82,51 @@ set signcolumn=number
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "KEY MAPPINGS
 
+"panes
+
+function! IsBufVisible(buf)
+    return a:buf != -1 && bufwinnr(a:buf) != -1
+endfunction
+
+function! HideBuf(buf)
+    if IsBufVisible(a:buf)
+        exe bufwinnr(a:buf) . 'hide'
+        return 1
+    endif
+    return 0
+endfunction
+
+function! GetBufNrByName(name)
+    for buf in range(1, bufnr('$'))
+        if bufname(buf) == a:name
+            return bufnr(buf)
+        endif
+    endfor
+    return -1
+endfunction
+
 "left pane
+
+let g:leftPaneWidth = 31
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"NERD TREE
+let NERDTreeShowHidden = 1
+let NERDTreeMinimalUI = 1
+let NERDTreeDirArrows = 1
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"TAGBAR
+let g:tagbar_left = 1
+let g:tagbar_width = g:leftPaneWidth
+let g:tagbar_compact = 1
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"UNDOTREE
+let g:undotree_SplitWidth = g:leftPaneWidth
+let g:undotree_HelpLine = 0
+let g:undotree_SetFocusWhenToggle = 1
+
 function! LeftPaneHideOther(opt)
     if exists("t:NERDTreeBufName") && bufwinnr(t:NERDTreeBufName) != -1 && a:opt !=# "nerdtree"
         NERDTreeToggle
@@ -124,43 +176,130 @@ tmap <silent> <F4> <C-w>:call LeftPaneUndotree()<CR>
 
 autocmd tableave * call LeftPaneHideOther("")
 
-"terminal pane
-function! GetTerminalBufNr()
+"bottom pane
+
+let g:bottomPaneHeight = 12
+
+function! BottomPaneHideOther(opt)
     for buf in range(1, bufnr('$'))
-        let buffer_name = bufname(buf)
-        if buffer_name =~# '\v(!/bin/bash*)'
-            return bufnr(buf)
+        if bufname(buf) == '[BufExplorer]' && bufwinnr(buf) != -1 && a:opt !=# "bufexplorer"
+            call BufExplorerToggle2()
+            silent exe 'bd ' . buf
+        elseif getbufvar(buf, 'current_syntax') == 'qf' && a:opt !=# "quickfix"
+            call HideBuf(buf)
+        elseif bufname(buf) == '!/bin/bash' && a:opt !=# "terminal"
+            call HideBuf(buf)
         endif
     endfor
-    return 0 
 endfunction
 
-function! HideBuf(buf)
-    if a:buf && bufwinnr(a:buf) != -1
-        exe bufwinnr(a:buf) . 'hide'
-        return 0
+"buflist pane
+let g:bufExplorerSplitHorzSize = g:bottomPaneHeight
+let g:bufExplorerDisableDefaultKeyMapping = 1
+let g:bufExplorerDefaultHelp = 0
+
+function! BufExplorerToggle2()
+    let bufnr = GetBufNrByName('[BufExplorer]')
+    if !HideBuf(bufnr)
+        call BottomPaneHideOther("bufexplorer")
+        wincmd b
+        BufExplorerHorizontalSplit
+        if bufnr != -1 && bufwinnr(bufnr) == -1
+            silent exe 'split #' . bufnr
+            call HideBuf(bufnr)
+            BufExplorerHorizontalSplit
+        endif
     endif
-    return 1
 endfunction
 
+nmap <silent> <F7> :call BufExplorerToggle2()<CR>
+tmap <silent> <F7> <C-w>:call BufExplorerToggle2()<CR>
+
+"quickfix pane
+
+function! IsBufQuickFix(bufnr)
+    return getbufvar(a:bufnr, 'current_syntax') == 'qf'
+endfunction
+
+function! GetQuickFixBufNr()
+    for buf in range(1, bufnr('$'))
+        if IsBufQuickFix(buf) 
+            return buf
+        endif
+    endfor
+    return -1 
+endfunction
+
+function! QuickFixToggle()
+    let bufnr = GetQuickFixBufNr()
+    if IsBufVisible(bufnr)
+        cclose
+    else
+        call BottomPaneHideOther("quickfix")
+        silent exe 'copen ' . g:bottomPaneHeight
+    endif
+endfunction
+
+autocmd bufcreate * if IsBufQuickFix(bufnr()) | silent exe 'map <silent> <buffer> <CR> :.cc<CR>' | endif
+
+function! Run(task)
+    call BottomPaneHideOther("quickfix")
+    silent exe 'Make! ' . a:task
+    Copen!
+    silent exe bufwinnr(GetQuickFixBufNr()) . 'resize ' . g:bottomPaneHeight
+endfunction
+
+command! -nargs=* Run call Run("<args>")
+
+nmap <F10> :Run<SPACE>
+tmap <F10> <C-w>:Run<SPACE>
+
+nmap <silent> <F6> :call QuickFixToggle()<CR>
+tmap <silent> <F6> <C-w>:call QuickFixToggle()<CR>
+
+"terminal pane
 function! TerminalToggle()
-    let term_bufnr = GetTerminalBufNr()
-    if HideBuf(term_bufnr)
-        wincmd b 
+    let term_bufnr = GetBufNrByName('!/bin/bash')
+    if term_bufnr != -1 && !HideBuf(term_bufnr)
+        call BottomPaneHideOther("terminal")
+        wincmd b
         if term_bufnr
             silent exe 'split #' . term_bufnr
         else
             terminal
         endif
-        resize 12
+        silent exe 'resize ' . g:bottomPaneHeight
     endif
 endfunction
 
 nmap <silent> <F5> :call TerminalToggle()<CR>
 tmap <silent> <F5> <C-w>:call TerminalToggle()<CR>
 
-autocmd tableave * call HideBuf(GetTerminalBufNr()) 
+autocmd tableave * call BottomPaneHideOther("") 
 
+"midnight commander
+
+function! OpenMC()
+    let name = "Midnigth Commander"
+    let bufnr = GetBufNrByName(name)
+    
+    if bufnr != -1
+        for i in range(tabpagenr("$"))
+            if index(tabpagebuflist(i + 1), bufnr) != -1
+                silent exe "tabnext " . (i + 1)
+                return
+            endif
+        endfor
+        silent exe "tabnew | buffer " . bufnr
+        return
+    endif
+
+    tabnew
+    call term_start('mc --skin=darkfar', {'term_name': name, 'term_finish': 'close', 'curwin': 1, 'norestore': 1})
+endfunction
+
+nmap <silent> <F8> :call OpenMC()<CR>
+tmap <silent> <F8> <C-w>:call OpenMC()<CR>
 "terminal escape
 
 "tnoremap <C-C> <C-w>
@@ -174,14 +313,14 @@ map <C-Left> <C-PageUp>
 map <C-h> <C-PageUp>
 map <C-Right> <C-PageDown>
 map <C-l> <C-PageDown>
-tnoremap <silent> <A-Left> <C-w>N:execute 'silent! tabmove ' . (tabpagenr()-2)<CR>
-tnoremap <silent> <A-h> <C-w>N:execute 'silent! tabmove ' . (tabpagenr()-2)<CR>
-tnoremap <silent> <A-Right> <C-w>N:execute 'silent! tabmove ' . (tabpagenr()+1)<CR>
-tnoremap <silent> <A-l> <C-w>N:execute 'silent! tabmove ' . (tabpagenr()+1)<CR>
-nnoremap <silent> <A-Left> :execute 'silent! tabmove ' . (tabpagenr()-2)<CR>
-nnoremap <silent> <A-h> :execute 'silent! tabmove ' . (tabpagenr()-2)<CR>
-nnoremap <silent> <A-Right> :execute 'silent! tabmove ' . (tabpagenr()+1)<CR>
-nnoremap <silent> <A-l> :execute 'silent! tabmove ' . (tabpagenr()+1)<CR>
+tnoremap <silent> <A-Left> <C-w>N:-tabmove<CR>
+tnoremap <silent> <A-h> <C-w>N:-tabmove<CR>
+tnoremap <silent> <A-Right> <C-w>N:+tabmove<CR>
+tnoremap <silent> <A-l> <C-w>N:+tabmove<CR>
+nnoremap <silent> <A-Left> :-tabmove<CR>
+nnoremap <silent> <A-h> :-tabmove<CR>
+nnoremap <silent> <A-Right> :+tabmove<CR>
+nnoremap <silent> <A-l> :+tabmove<CR>
 
 "window navigation
 tmap <C-Up> <C-w>W
@@ -196,10 +335,12 @@ map <C-j> <C-w>w
 "terminal scrolls
 tmap <PageUp> <C-w>N<PageUp>
 
-map <F10> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans<'
+map <F12> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans<'
             \ . synIDattr(synID(line("."),col("."),0),"name") . "> lo<"
             \ . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">"<CR>
 
+"editor mappings
+noremap <CR> i<CR><ESC>
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "ENCODING
 
@@ -219,25 +360,6 @@ hi CocErrorSign ctermfg=Red
 hi link markdownError NONE
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-"NERD TREE
-
-let NERDTreeShowHidden = 1
-let NERDTreeMinimalUI = 1
-let NERDTreeDirArrows = 1
-
-
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-"TAGBAR
-let g:tagbar_left = 1
-let g:tagbar_width = 31
-let g:tagbar_compact = 1
-
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-"UNDOTREE
-let g:undotree_SplitWidth = 31
-let g:undotree_HelpLine = 0
-let g:undotree_SetFocusWhenToggle = 1
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "NERD COMMENTER
 
 filetype plugin on
@@ -253,7 +375,7 @@ let g:lightline = {
 \             [ 'fileformat', 'fileencoding', 'filetype' ] ]
 \ },
 \ 'inactive' : {
-\      'left': [ [ 'filename' ] ],
+\      'left': [ [ 'gitbranch', 'filename' ] ],
 \     'right': [ [ 'lineinfo' ],
 \                [ 'percent' ] ]
 \ },
@@ -299,6 +421,12 @@ let g:lightline_fields = {
 \  },
 \ 'undotree' : {
 \   'mode': 'UNDO',
+\  },
+\ 'qf' : {
+\   'mode': 'QUICKFIX',
+\  },
+\ 'bufexplorer' : {
+\   'mode': 'BUFFERS',
 \  },
 \ 'help' : {
 \   'mode': 'HELP',
@@ -410,7 +538,7 @@ set laststatus=2
 function! SessionCloseUnrestorableBuffs()
     for buf in range(1, bufnr('$'))
         let buffer_name = bufname(buf)
-            if buffer_name =~# '\v(NERD_tree_*|__Tagbar__.*|undotree_*|diffpanel_*)'
+            if buffer_name =~# '\v(NERD_tree_*|__Tagbar__.*|undotree_*|diffpanel_*|\[BufExplorer\])'
                 exe 'bw' . bufnr(buf)
             endif
     endfor
@@ -587,4 +715,31 @@ nnoremap <silent><nowait> <space>j  :<C-u>CocNext<CR>
 nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
 " Resume latest coc list.
 nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
+
+""" ACK
+" ack.vim --- {{{
+
+" Use ripgrep for searching ⚡️
+" Options include:
+" --vimgrep -> Needed to parse the rg response properly for ack.vim
+" --type-not sql -> Avoid huge sql file dumps as it slows down the search
+" --smart-case -> Search case insensitive if all lowercase pattern, Search case sensitively otherwise
+let g:ackprg = 'rg --vimgrep --type-not sql --smart-case'
+
+" Auto close the Quickfix list after pressing '<enter>' on a list item
+let g:ack_autoclose = 1
+
+" Any empty ack search will search for the work the cursor is on
+let g:ack_use_cword_for_empty_search = 1
+
+" Don't jump to first match
+cnoreabbrev Ack Ack!
+
+" Maps <leader>/ so we're ready to type the search keyword
+nnoremap <Leader>/ :Ack!<Space>
+" }}}
+
+" Navigate quickfix list with ease
+nnoremap <silent> [q :cprevious<CR>
+nnoremap <silent> ]q :cnext<CR>
 
