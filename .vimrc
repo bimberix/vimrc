@@ -4,10 +4,13 @@ if empty(glob('~/.vim/autoload/plug.vim'))
   autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
 endif
 
+let g:ale_disable_lsp = 1
+
 call plug#begin('~/.vim/plugged')
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'dense-analysis/ale'
 Plug 'majutsushi/tagbar'
-"Plug 'jackguo380/vim-lsp-cxx-highlight'
+Plug 'jackguo380/vim-lsp-cxx-highlight'
 Plug 'frazrepo/vim-rainbow'
 Plug 'mbbill/undotree'
 Plug 'tpope/vim-fugitive'
@@ -27,6 +30,8 @@ Plug 'jlanzarotta/bufexplorer'
 "Plug 'jeetsukumaran/vim-buffergator'
 "Plug 'roblillack/vim-bufferlist'
 call plug#end()
+
+packadd termdebug
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "EDITOR
@@ -57,7 +62,7 @@ set mouse=nvi
 set backspace=indent,eol,start
 set clipboard=unnamed
 set clipboard=unnamedplus
-set makeprg=mymake
+set makeprg=/usr/bin/env\ bash\ -ic
 
 " set fail if hidden is not set.
 set hidden
@@ -204,6 +209,7 @@ function! BufExplorerToggle2()
         call BottomPaneHideOther("bufexplorer")
         wincmd b
         BufExplorerHorizontalSplit
+        let bufnr = GetBufNrByName('[BufExplorer]')
         if !IsBufVisible(bufnr)
             silent exe 'split #' . bufnr
             call HideBuf(bufnr)
@@ -242,22 +248,32 @@ endfunction
 
 autocmd bufcreate * if IsBufQuickFix(bufnr()) | silent exe 'map <silent> <buffer> <CR> :.cc<CR>' | endif
 
-function! Run(task)
+function! MyMake(task)
     call BottomPaneHideOther("quickfix")
     silent exe 'Make! ' . a:task
     Copen!
     silent exe bufwinnr(GetQuickFixBufNr()) . 'resize ' . g:bottomPaneHeight
 endfunction
 
-command! -nargs=* Run call Run("<args>")
+command! -nargs=* MyMake call MyMake("<args>")
 
-nmap <F10> :Run<SPACE>
-tmap <F10> <C-w>:Run<SPACE>
+nmap <F10> :MyMake<SPACE>
+tmap <F10> <C-w>:MyMake<SPACE>
 
 nmap <silent> <F6> :call QuickFixToggle()<CR>
 tmap <silent> <F6> <C-w>:call QuickFixToggle()<CR>
 
 "terminal pane
+
+function! IsBufTerminal(bufnr)
+    for nr in term_list()
+        if nr == a:bufnr
+            return 1
+        endif
+    endfor
+    return 0
+endfunction
+
 function! TerminalToggle()
     let term_bufnr = GetBufNrByName('!/bin/bash')
     if !HideBuf(term_bufnr)
@@ -277,6 +293,16 @@ tmap <silent> <F5> <C-w>:call TerminalToggle()<CR>
 
 autocmd tableave * call BottomPaneHideOther("") 
 
+"terminal tab
+
+function! OpenTerminal()
+    $tabnew
+    call term_start('/bin/env bash', {'term_name': 'shell', 'term_finish': 'close', 'curwin': 1, 'norestore': 1})
+endfunction
+
+nmap <silent> <S-F5> :call OpenTerminal()<CR>
+tmap <silent> <S-F5> <C-w>:call OpenTerminal()<CR>
+
 "midnight commander
 
 function! OpenMC()
@@ -290,11 +316,11 @@ function! OpenMC()
                 return
             endif
         endfor
-        silent exe "tabnew | buffer " . bufnr
+        silent exe "$tabnew | buffer " . bufnr
         return
     endif
 
-    tabnew
+    $tabnew
     call term_start('mc --skin=darkfar', {'term_name': name, 'term_finish': 'close', 'curwin': 1, 'norestore': 1})
 endfunction
 
@@ -333,7 +359,7 @@ map <C-Down> <C-w>w
 map <C-j> <C-w>w
 
 "terminal scrolls
-tmap <PageUp> <C-w>N<PageUp>
+tmap <ScrollWheelUp> <C-w>N
 
 map <F12> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans<'
             \ . synIDattr(synID(line("."),col("."),0),"name") . "> lo<"
@@ -515,20 +541,49 @@ endfunction
 
 function! Lightline_tab_filename(n)
     let buflist = tabpagebuflist(a:n)
-    let _ = expand('#'.Lightline_tab_file_bufnr(a:n).':t')
-  return _ !=# '' ? _ : '[No Name]'
+    let bufnr = Lightline_tab_file_bufnr(a:n)
+    let tabname = ''
+    let spaces = "               "
+    
+    if IsBufTerminal(bufnr)
+        let tabname = term_gettitle(bufnr)
+    endif
+    if tabname == ''
+        let tabname = expand('#' . bufnr . ':t')
+    endif
+    if tabname == ''
+        let tabname = "[No Name]"
+    endif
+    if len(tabname) > 15
+        let tabname = strcharpart(tabname, 0, 6) . "..." . strcharpart(tabname, len(tabname) - 6, 6)
+    elseif len(tabname) < 15
+        let tabname = strcharpart(spaces, 0, float2nr(floor((15 - len(tabname))/2.0))) . tabname . strcharpart(spaces, 0, float2nr(ceil((15 - len(tabname))/2.0)))
+    endif
+    return tabname
 endfunction
 
 function! Lightline_tab_modified(n) abort
-    return getbufvar(Lightline_tab_file_bufnr(a:n), '&modified') ? "\u2260" : getbufvar(Lightline_tab_file_bufnr(a:n), '&modifiable') ? '' : '-'
+    let bufnr = Lightline_tab_file_bufnr(a:n)
+    
+    if IsBufTerminal(bufnr)
+        return ''
+    endif
+    
+    return getbufvar(bufnr, '&modified') ? "\u2260" : ''
 endfunction
 
 function! Lightline_tab_readonly(n) abort
-  return getbufvar(Lightline_tab_file_bufnr(a:n), '&readonly') ? "\ue0a2" : ''
+    let bufnr = Lightline_tab_file_bufnr(a:n)
+    
+    if IsBufTerminal(bufnr)
+        return ''
+    endif
+
+    return getbufvar(bufnr, '&readonly') || !getbufvar(bufnr, '&modifiable') ? "\ue0a2" : ''
 endfunction
 
-" Use auocmd to force lightline update.
-autocmd User CocStatusChinge,CocDiagnosticChange call lightline#update()
+" Use autocmd to force lightline update.
+autocmd User CocStatusChange,CocDiagnosticChange call lightline#update()
 
 set laststatus=2
 
@@ -588,6 +643,17 @@ augroup end
 augroup layout_save
 	autocmd vimleavepre * if SessionExist() | call SessionSave() | endif
 augroup end
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"RAINBOW
+
+let g:rainbow_active = 1
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"ALE
+
+let g:ale_sign_error = '●'
+let g:ale_sign_warning = '▲'
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "COC

@@ -7,6 +7,7 @@
     "diagnostic.warningSign": "▲",
     "diagnostic.infoSign": "■",
     "diagnostic.hintSign": "◆",
+    "diagnostic.displayByAle": true,
     "properties": {
         "http.proxy": {
             "type": "string",
