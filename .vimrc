@@ -297,7 +297,7 @@ autocmd tableave * call BottomPaneHideOther("")
 
 function! OpenTerminal()
     $tabnew
-    call term_start('/bin/env bash', {'term_name': 'shell', 'term_finish': 'close', 'curwin': 1, 'norestore': 1})
+    call term_start(&shell, {'term_name': 'shell', 'term_finish': 'close', 'curwin': 1, 'norestore': 1})
 endfunction
 
 nmap <silent> <S-F5> :call OpenTerminal()<CR>
@@ -396,14 +396,14 @@ let g:lightline = {
 \ 'active': {
 \   'left': [ [ 'mode', 'paste' ],
 \             [ 'gitbranch', 'readonly', 'filename', 'modified' ] ],
-\  'right': [ [ 'lineinfo' , 'align' ],
-\             [ 'percent' ],
+\  'right': [ [ 'percent' , 'align' ],
+\             [ 'lineinfo' ],
 \             [ 'fileformat', 'fileencoding', 'filetype' ] ]
 \ },
 \ 'inactive' : {
 \      'left': [ [ 'gitbranch', 'filename' ] ],
-\     'right': [ [ 'lineinfo' ],
-\                [ 'percent' ] ]
+\     'right': [ [ 'percent' ],
+\                [ 'lineinfo' ] ]
 \ },
 \ 'tabline' : {
 \     'left': [ [ 'tabs' ] ],
@@ -489,16 +489,17 @@ function! Lightline_percent()
 endfunction
 
 function! Lightline_lineinfo()
-    return !Lightline_field_enabled("lineinfo") ? "" : printf("%3d\ue0a1 %3d\ue0a3", line('.'), col('.'))
+    return !Lightline_field_enabled("lineinfo") ? "" : printf("%3d:%-2d \ue0a1", line('.'), col('.'))
 endfunction
 
 function! Lightline_modified()
     let mode=lightline#mode()
-    return mode ==? 'terminal' || !Lightline_field_enabled("modified") ? "" : &modified ? "\u2260" : &modifiable ? "" : "-"
+    return mode ==? 'terminal' || !Lightline_field_enabled("modified") || !&modified ? "" : "\u2260"
 endfunction
 
 function! Lightline_readonly()
-    return &readonly && Lightline_field_enabled("readonly") ? "\ue0a2" : ''
+    let mode=lightline#mode()
+    return mode ==? 'terminal' || !&readonly || &modifiable || !Lightline_field_enabled("readonly") ? "" : "\ue0a2"
 endfunction
 
 function! Lightline_gitbranch()
