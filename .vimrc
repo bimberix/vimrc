@@ -8,6 +8,7 @@ let g:ale_disable_lsp = 1
 
 call plug#begin('~/.vim/plugged')
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'pappasam/coc-jedi', { 'do': 'yarn install --frozen-lockfile && yarn build' }
 Plug 'dense-analysis/ale'
 Plug 'majutsushi/tagbar'
 Plug 'jackguo380/vim-lsp-cxx-highlight'
@@ -82,10 +83,17 @@ set updatetime=300
 set shortmess+=c
 
 " Recently vim can merge signcolumn and number column into one
-set signcolumn=number
+if !has('nvim')
+    set signcolumn=number
+endif
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "KEY MAPPINGS
+
+if has('nvim')
+    tnoremap <Esc> <C-\><C-n>
+    tmap <silent> <C-w> <Esc>
+endif
 
 "panes
 
@@ -103,7 +111,7 @@ endfunction
 
 function! GetBufNrByName(name)
     for buf in range(1, bufnr('$'))
-        if bufname(buf) == a:name
+        if bufname(buf) =~ a:name
             return bufnr(buf)
         endif
     endfor
@@ -188,11 +196,11 @@ let g:bottomPaneHeight = 12
 function! BottomPaneHideOther(opt)
     for buf in range(1, bufnr('$'))
         if bufname(buf) == '[BufExplorer]' && bufwinnr(buf) != -1 && a:opt !=# "bufexplorer"
-            call BufExplorerToggle2()
-            silent exe 'bd ' . buf
+            "ToggleBufExplorer
+            call HideBuf(buf)
         elseif getbufvar(buf, 'current_syntax') == 'qf' && a:opt !=# "quickfix"
             call HideBuf(buf)
-        elseif bufname(buf) == '!/bin/bash' && a:opt !=# "terminal"
+        elseif ((!has('nvim') && bufname(buf) == '!/bin/bash') || (has('nvim') && bufname(buf) =~ '^term://.*/usr/bin/env bash')) && a:opt !=# "terminal"
             call HideBuf(buf)
         endif
     endfor
@@ -203,23 +211,21 @@ let g:bufExplorerSplitHorzSize = g:bottomPaneHeight
 let g:bufExplorerDisableDefaultKeyMapping = 1
 let g:bufExplorerDefaultHelp = 0
 
-function! BufExplorerToggle2()
-    let bufnr = GetBufNrByName('[BufExplorer]')
-    if !HideBuf(bufnr)
+function! BufExplorerToggle()
+    let bufnr = GetBufNrByName('\[BufExplorer\]')
+    if IsBufVisible(bufnr)
+        ToggleBufExplorer
+    else
         call BottomPaneHideOther("bufexplorer")
+        "ToggleBufExplorer
+        "ToggleBufExplorer
         wincmd b
         BufExplorerHorizontalSplit
-        let bufnr = GetBufNrByName('[BufExplorer]')
-        if !IsBufVisible(bufnr)
-            silent exe 'split #' . bufnr
-            call HideBuf(bufnr)
-            BufExplorerHorizontalSplit
-        endif
     endif
 endfunction
 
-nmap <silent> <F7> :call BufExplorerToggle2()<CR>
-tmap <silent> <F7> <C-w>:call BufExplorerToggle2()<CR>
+nmap <silent> <F7> :call BufExplorerToggle()<CR>
+tmap <silent> <F7> <C-w>:call BufExplorerToggle()<CR>
 
 "quickfix pane
 
@@ -266,25 +272,40 @@ tmap <silent> <F6> <C-w>:call QuickFixToggle()<CR>
 "terminal pane
 
 function! IsBufTerminal(bufnr)
-    for nr in term_list()
-        if nr == a:bufnr
-            return 1
-        endif
-    endfor
+    if !has('nvim')
+        for nr in term_list()
+            if nr == a:bufnr
+                return 1
+            endif
+        endfor
+    else
+        return '' != getbufvar(a:bufnr, 'term_title')
+    endif
     return 0
 endfunction
 
 function! TerminalToggle()
-    let term_bufnr = GetBufNrByName('!/bin/bash')
+    if !has('nvim')
+        let term_bufnr = GetBufNrByName('!/bin/bash')
+    else
+        let term_bufnr = GetBufNrByName('^term://.*/usr/bin/env bash')
+    endif
     if !HideBuf(term_bufnr)
         call BottomPaneHideOther("terminal")
         wincmd b
         if term_bufnr != -1
-            silent exe 'split #' . term_bufnr
+            silent exe g:bottomPaneHeight . 'split #' . term_bufnr
+            startinsert
         else
-            terminal
+            if !has('nvim')
+                terminal
+                silent exe 'resize ' . g:bottomPaneHeight
+            else
+                silent exe g:bottomPaneHeight . 'split term:///usr/bin/env bash'
+                setlocal nonumber
+                startinsert
+            endif
         endif
-        silent exe 'resize ' . g:bottomPaneHeight
     endif
 endfunction
 
@@ -297,31 +318,53 @@ autocmd tableave * call BottomPaneHideOther("")
 
 function! OpenTerminal()
     $tabnew
-    call term_start(&shell, {'term_name': 'shell', 'term_finish': 'close', 'curwin': 1, 'norestore': 1})
+    if !has('nvim')
+        call term_start(&shell, {'term_name': 'shell', 'term_finish': 'close', 'curwin': 1, 'norestore': 1})
+    else
+        terminal
+        setlocal nonumber
+        startinsert
+    endif
 endfunction
 
-nmap <silent> <S-F5> :call OpenTerminal()<CR>
-tmap <silent> <S-F5> <C-w>:call OpenTerminal()<CR>
-
+if !has('nvim')
+    nmap <silent> <S-F5> :call OpenTerminal()<CR>
+    tmap <silent> <S-F5> <C-w>:call OpenTerminal()<CR>
+else
+    nmap <silent> <F17> :call OpenTerminal()<CR>
+    tmap <silent> <F17> <C-w>:call OpenTerminal()<CR>
+endif
 "midnight commander
 
 function! OpenMC()
-    let name = "Midnigth Commander"
+    if !has('nvim')
+        let name = "Midnigth Commander"
+    else
+        let name = "^term://.*:mc --skin=gotar"
+    endif
     let bufnr = GetBufNrByName(name)
     
     if bufnr != -1
         for i in range(tabpagenr("$"))
             if index(tabpagebuflist(i + 1), bufnr) != -1
                 silent exe "tabnext " . (i + 1)
+                setlocal nonumber
                 return
             endif
         endfor
         silent exe "$tabnew | buffer " . bufnr
+        setlocal nonumber
         return
     endif
 
     $tabnew
-    call term_start('mc --skin=darkfar', {'term_name': name, 'term_finish': 'close', 'curwin': 1, 'norestore': 1})
+    if !has('nvim')
+        call term_start('mc --skin=gotar', {'term_name': name, 'term_finish': 'close', 'curwin': 1, 'norestore': 1})
+    else
+        call termopen('mc --skin=gotar')
+        setlocal nonumber
+        startinsert
+    endif
 endfunction
 
 nmap <silent> <F8> :call OpenMC()<CR>
@@ -377,13 +420,16 @@ set encoding=utf-8
 "THEME
 
 syntax enable
-set t_Co=256
-set background=dark
-colorscheme PaperColor
+"set t_Co=256
+"set background=dark
+"colorscheme PaperColor
+colorscheme gruvbox8
 hi LspCxxHlGroupMemberVariable ctermfg=Brown
 hi link CocWarningSign WarningMsg
 hi CocErrorSign ctermfg=Red
 hi link markdownError NONE
+execute "hi ALEWarningSign ctermfg=Yellow ctermbg=" . synIDattr(synIDtrans(hlID("SignColumn")), "bg")
+execute "hi ALEErrorSign ctermfg=Red ctermbg=" . synIDattr(synIDtrans(hlID("SignColumn")), "bg")
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "NERD COMMENTER
@@ -547,7 +593,11 @@ function! Lightline_tab_filename(n)
     let spaces = "               "
     
     if IsBufTerminal(bufnr)
-        let tabname = term_gettitle(bufnr)
+        if !has('nvim')
+            let tabname = term_gettitle(bufnr)
+        else
+            let tabname = getbufvar(bufnr, 'term_title')
+        endif
     endif
     if tabname == ''
         let tabname = expand('#' . bufnr . ':t')
@@ -627,10 +677,10 @@ function! SessionSave()
 endfunction
 
 function! DefaultWorkspace()
-	terminal
-	wincmd J
-	res12
-	wincmd k
+	"terminal
+	"wincmd J
+	"res12
+	"wincmd k
 endfunction
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
