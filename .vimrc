@@ -4,12 +4,12 @@ if empty(glob('~/.vim/autoload/plug.vim'))
   autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
 endif
 
-let g:ale_disable_lsp = 1
+"let g:ale_disable_lsp = 1
 
 call plug#begin('~/.vim/plugged')
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'pappasam/coc-jedi', { 'do': 'yarn install --frozen-lockfile && yarn build' }
-Plug 'dense-analysis/ale'
+"Plug 'dense-analysis/ale'
 Plug 'majutsushi/tagbar'
 Plug 'jackguo380/vim-lsp-cxx-highlight'
 Plug 'frazrepo/vim-rainbow'
@@ -30,6 +30,7 @@ Plug 'jlanzarotta/bufexplorer'
 "Plug 'Shougo/unite.vim'
 "Plug 'jeetsukumaran/vim-buffergator'
 "Plug 'roblillack/vim-bufferlist'
+Plug 'itchyny/calendar.vim'
 call plug#end()
 
 packadd termdebug
@@ -196,7 +197,6 @@ let g:bottomPaneHeight = 12
 function! BottomPaneHideOther(opt)
     for buf in range(1, bufnr('$'))
         if bufname(buf) == '[BufExplorer]' && bufwinnr(buf) != -1 && a:opt !=# "bufexplorer"
-            "ToggleBufExplorer
             call HideBuf(buf)
         elseif getbufvar(buf, 'current_syntax') == 'qf' && a:opt !=# "quickfix"
             call HideBuf(buf)
@@ -211,16 +211,26 @@ let g:bufExplorerSplitHorzSize = g:bottomPaneHeight
 let g:bufExplorerDisableDefaultKeyMapping = 1
 let g:bufExplorerDefaultHelp = 0
 
+function! BufExplorerReload()
+    unlet g:bufexplorer_version
+    call plug#begin('~/.vim/plugged')
+    Plug 'jlanzarotta/bufexplorer'
+    call plug#end()
+endfunction
+
 function! BufExplorerToggle()
     let bufnr = GetBufNrByName('\[BufExplorer\]')
     if IsBufVisible(bufnr)
         ToggleBufExplorer
     else
         call BottomPaneHideOther("bufexplorer")
-        "ToggleBufExplorer
-        "ToggleBufExplorer
         wincmd b
         BufExplorerHorizontalSplit
+        let bufnr = GetBufNrByName('\[BufExplorer\]')
+        if !IsBufVisible(bufnr)
+            call BufExplorerReload()
+            BufExplorerHorizontalSplit
+        endif
     endif
 endfunction
 
@@ -424,12 +434,22 @@ syntax enable
 "set background=dark
 "colorscheme PaperColor
 colorscheme gruvbox8
-hi LspCxxHlGroupMemberVariable ctermfg=Brown
-hi link CocWarningSign WarningMsg
-hi CocErrorSign ctermfg=Red
-hi link markdownError NONE
-execute "hi ALEWarningSign ctermfg=Yellow ctermbg=" . synIDattr(synIDtrans(hlID("SignColumn")), "bg")
-execute "hi ALEErrorSign ctermfg=Red ctermbg=" . synIDattr(synIDtrans(hlID("SignColumn")), "bg")
+"hi LspCxxHlGroupMemberVariable ctermfg=Brown
+"hi link CocWarningSign WarningMsg
+"hi CocErrorSign ctermfg=Red
+"hi link markdownError NONE
+
+execute "hi CocErrorSign ctermfg=Red ctermbg=" . synIDattr(synIDtrans(hlID("SignColumn")), "bg")
+execute "hi CocWarningSign ctermfg=Yellow ctermbg=" . synIDattr(synIDtrans(hlID("SignColumn")), "bg")
+execute "hi CocInfoSign ctermfg=White ctermbg=" . synIDattr(synIDtrans(hlID("SignColumn")), "bg")
+execute "hi CocHintSign ctermfg=LightBlue ctermbg=" . synIDattr(synIDtrans(hlID("SignColumn")), "bg")
+
+execute "hi! CocErrorFloat ctermfg=Red"
+execute "hi! CocWarningFloat ctermfg=Yellow"
+execute "hi! CocInfoFloat ctermfg=White"
+execute "hi! CocHintFloat ctermfg=LightBlue"
+
+
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "NERD COMMENTER
@@ -703,8 +723,8 @@ let g:rainbow_active = 1
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "ALE
 
-let g:ale_sign_error = '●'
-let g:ale_sign_warning = '▲'
+"let g:ale_sign_error = '●'
+"let g:ale_sign_warning = '▲'
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "COC

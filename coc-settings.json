@@ -1,4 +1,17 @@
 {
+    "diagnostic-languageserver.mergeConfig": true,
+    "diagnostic-languageserver.filetypes": {
+        "sh": "shellcheck",
+        "python": "pylint"
+    },
+    "diagnostic-languageserver.formatFiletypes": {
+        "sh": "shfmt",
+        "python": [
+            "black",
+            "isort",
+            "docformatter"
+        ]
+    },
     "clangd.semanticHighlighting": true,
     "jedi.enable": true,
     "jedi.startupMessage": false,
@@ -17,7 +30,14 @@
     "diagnostic.warningSign": "▲",
     "diagnostic.infoSign": "■",
     "diagnostic.hintSign": "◆",
-    "diagnostic.displayByAle": true,
+    "diagnostic.displayByAle": false,
+    "diagnostic.messageTarget": "float",
+    "diagnostic.level": "hint",
+    "diagnostic.format": "%source: %message",
+    "diagnostic.enableMessage": "always",
+    "diagnostic.refreshOnInsertMode": false,
+    "diagnostic.enableHighlightLineNumber": false,
+    "diagnostic.virtualText": false,
     "properties": {
         "http.proxy": {
             "type": "string",
