@@ -31,8 +31,11 @@ Plug 'jlanzarotta/bufexplorer'
 "Plug 'jeetsukumaran/vim-buffergator'
 "Plug 'roblillack/vim-bufferlist'
 Plug 'itchyny/calendar.vim'
+"Plug 'puremourning/vimspector', { 'do': 'mkdir -p ../../pack/vimspector/opt/ && ln -sf \"$(pwd)\" ../../pack/vimspector/opt/vimspector' }
 call plug#end()
 
+let g:vimspector_enable_mappings = 'HUMAN'
+"packadd! vimspector
 packadd termdebug
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -259,6 +262,7 @@ function! QuickFixToggle()
     else
         call BottomPaneHideOther("quickfix")
         silent exe 'copen ' . g:bottomPaneHeight
+        set ma
     endif
 endfunction
 
