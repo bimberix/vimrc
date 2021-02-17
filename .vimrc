@@ -4,6 +4,10 @@ if empty(glob('~/.vim/autoload/plug.vim'))
   autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
 endif
 
+function! FirstRun()
+    CocInstall coc-clangd coc-jedi coc-diagnostic coc-json coc-markdownlint coc-sh
+endfunction
+
 "let g:ale_disable_lsp = 1
 
 call plug#begin('~/.vim/plugged')
@@ -416,7 +420,7 @@ map <C-Down> <C-w>w
 map <C-j> <C-w>w
 
 "terminal scrolls
-tmap <ScrollWheelUp> <C-w>N
+"tmap <ScrollWheelUp> <C-w>N
 
 map <F12> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans<'
             \ . synIDattr(synID(line("."),col("."),0),"name") . "> lo<"
