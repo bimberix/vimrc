@@ -12,7 +12,63 @@
             "docformatter"
         ]
     },
+    "diagnostic-languageserver.linters": {
+        "pylint": {
+            "args": [
+                "--rcfile",
+                "pyproject.toml",
+                "--output-format",
+                "text",
+                "-j",
+                "4",
+                "-d",
+                "E0402",
+                "--score",
+                "no",
+                "--from-stdin",
+                "--msg-template",
+                "'{line}:{column}:{category}:{msg} ({msg_id}:{symbol})'",
+                "lol", //"%filename"
+            ],
+            "securities": {
+                "informational": "info",
+                "refactor": "hint",
+                "convention": "hint",
+                "warning": "warning",
+                "error": "error",
+                "fatal": "error"
+            }
+        }
+    },
+    "diagnostic-languageserver.formatters": {
+        "black": {
+            "args": [
+                "--config",
+                "pyproject.toml",
+                "--quiet",
+                "-"
+            ]
+        },
+        "isort": {
+            "args": [
+                "--sp",
+                "pyproject.toml",
+                "--quiet",
+                "-"
+            ]
+        },
+        "docformatter": {
+            "command": "docformatter",
+            "args": [
+                "--in-place",
+                "--pre-summary-newline",
+                "--make-summary-multi-line",
+                "-"
+            ]
+        }
+    },
     "clangd.semanticHighlighting": true,
+    "clangd.path": "~/.config/coc/extensions/coc-clangd-data/install/13.0.0/clangd_13.0.0/bin/clangd",
     "jedi.enable": true,
     "jedi.startupMessage": false,
     "jedi.markupKindPreferred": "markdown",
@@ -21,28 +77,43 @@
     "jedi.executable.command": "jedi-language-server",
     "jedi.executable.args": [],
     "jedi.completion.disableSnippets": false,
+    "jedi.completion.resolveEagerly": true,
     "jedi.diagnostics.enable": true,
     "jedi.diagnostics.didOpen": true,
     "jedi.diagnostics.didChange": true,
     "jedi.diagnostics.didSave": true,
     "jedi.workspace.extraPaths": [],
+    "yaml.format.enable": true,
+    "suggest.defaultSortMethod": "alphabetical",
+    "suggest.autoTrigger": "always",
+    "suggest.minTriggerInputLength": 3,
     "diagnostic.errorSign": "●",
     "diagnostic.warningSign": "▲",
     "diagnostic.infoSign": "■",
     "diagnostic.hintSign": "◆",
     "diagnostic.displayByAle": false,
-    "diagnostic.messageTarget": "float",
     "diagnostic.level": "hint",
     "diagnostic.format": "%source: %message",
     "diagnostic.enableMessage": "always",
+    "diagnostic.messageTarget": "float",
     "diagnostic.refreshOnInsertMode": false,
     "diagnostic.enableHighlightLineNumber": false,
     "diagnostic.virtualText": false,
+    "diagnostic.virtualTextLines": 10,
+    "diagnostic.virtualTextCurrentLineOnly": true,
+    "diagnostic.checkCurrentLine": true,
+//    "diagnostic.messageDelay": 2000,
     "properties": {
         "http.proxy": {
             "type": "string",
             "default": "",
             "description": "http proxy uri, used for extensions that send request. Format: proxy-server:1234 or user:password@prox-server:1234 with auth support"
         }
-    }
+    },
+    "cSpell.userWords": [
+      "asyncio",
+      "deque",
+      "uart",
+      "unregisters"
+    ]
 }

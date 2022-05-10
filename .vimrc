@@ -5,15 +5,24 @@ if empty(glob('~/.vim/autoload/plug.vim'))
 endif
 
 function! FirstRun()
-    CocInstall coc-clangd coc-jedi coc-diagnostic coc-json coc-markdownlint coc-sh
+    CocInstall coc-clangd coc-jedi coc-diagnostic coc-json coc-markdownlint coc-sh coc-spell-checker
+    "VimspectorInstall debugpy
 endfunction
 
 "let g:ale_disable_lsp = 1
 
 call plug#begin('~/.vim/plugged')
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
+"Plug 'neoclide/coc.nvim', {'commit': '71b5766a7cc28daef89fac7db99340cd532035b3'}
 Plug 'pappasam/coc-jedi', { 'do': 'yarn install --frozen-lockfile && yarn build' }
 "Plug 'dense-analysis/ale'
+
+" Track the engine.
+Plug 'SirVer/ultisnips'
+" Snippets are separated from the engine. Add this if you want them:
+Plug 'honza/vim-snippets'
+
+Plug 'relastle/vim-nayvy'
 Plug 'majutsushi/tagbar'
 Plug 'jackguo380/vim-lsp-cxx-highlight'
 Plug 'frazrepo/vim-rainbow'
@@ -31,16 +40,19 @@ Plug 'NLKNguyen/papercolor-theme'
 Plug 'lifepillar/vim-gruvbox8'
 Plug 'mileszs/ack.vim'
 Plug 'jlanzarotta/bufexplorer'
+"Plug 'chrisbra/SudoEdit.vim'
 "Plug 'Shougo/unite.vim'
 "Plug 'jeetsukumaran/vim-buffergator'
 "Plug 'roblillack/vim-bufferlist'
-Plug 'itchyny/calendar.vim'
+"Plug 'itchyny/calendar.vim'
 "Plug 'puremourning/vimspector', { 'do': 'mkdir -p ../../pack/vimspector/opt/ && ln -sf \"$(pwd)\" ../../pack/vimspector/opt/vimspector' }
 call plug#end()
 
-let g:vimspector_enable_mappings = 'HUMAN'
+"let g:vimspector_enable_mappings = 'NONE'
+"let g:vimspector_enable_mappings = 'HUMAN'
 "packadd! vimspector
 packadd termdebug
+
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "EDITOR
@@ -73,6 +85,10 @@ set clipboard=unnamed
 set clipboard=unnamedplus
 set makeprg=/usr/bin/env\ bash\ -ic
 
+"set foldmethod=indent
+"set foldlevel=1
+"set foldclose=all
+
 " set fail if hidden is not set.
 set hidden
 
@@ -95,12 +111,17 @@ if !has('nvim')
     set signcolumn=number
 endif
 
+"set breakindent
+"set breakindentopt=sbr
+"set cpoptions+=n
+"let &showbreak=' + »»» »»»'
+
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "KEY MAPPINGS
 
 if has('nvim')
-    tnoremap <Esc> <C-\><C-n>
-    tmap <silent> <C-w> <Esc>
+    "tnoremap <Esc> <C-\><C-n>
+    tmap <silent> <C-w> <C-\><C-n>
 endif
 
 "panes
@@ -238,6 +259,7 @@ function! BufExplorerToggle()
             call BufExplorerReload()
             BufExplorerHorizontalSplit
         endif
+        wincmd J
     endif
 endfunction
 
@@ -267,6 +289,7 @@ function! QuickFixToggle()
         call BottomPaneHideOther("quickfix")
         silent exe 'copen ' . g:bottomPaneHeight
         set ma
+        wincmd J
     endif
 endfunction
 
@@ -324,6 +347,8 @@ function! TerminalToggle()
                 startinsert
             endif
         endif
+        set nonumber
+        wincmd J
     endif
 endfunction
 
@@ -356,7 +381,7 @@ endif
 
 function! OpenMC()
     if !has('nvim')
-        let name = "Midnigth Commander"
+        let name = "Midnight Commander"
     else
         let name = "^term://.*:mc --skin=gotar"
     endif
@@ -438,7 +463,7 @@ set encoding=utf-8
 "THEME
 
 syntax enable
-"set t_Co=256
+set t_Co=256
 "set background=dark
 "colorscheme PaperColor
 colorscheme gruvbox8
@@ -590,7 +615,8 @@ function! Lightline_mode()
 endfunction
 
 function! Lightline_filename()
-    return !Lightline_field_enabled("filename") ? '' : expand('%:t')
+    return exists("b:term_title") ? b:term_title :
+    	\ Lightline_field_enabled("filename") ? expand('%:t') : ''
 endfunction
 
 function! Lightline_fileformat()
@@ -751,8 +777,8 @@ function! s:check_back_space() abort
   return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
 
-" Use <C-k> to trigger completion.
-inoremap <silent><expr> <C-k> coc#refresh()
+" Use <C-space> to trigger completion.
+inoremap <silent><expr> <C-SPACE> coc#refresh()
 
 " Use <cr> to confirm completion, `<C-g>u` means break undo chain at current
 " position. Coc only does snippet and additional edit on confirm.
@@ -861,6 +887,27 @@ nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
 " Resume latest coc list.
 nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
 
+
+"""coc-yank
+nnoremap <silent> <leader>y  :<C-u>CocList -A --normal yank<cr>
+
+"""ultisnip
+" Trigger configuration. You need to change this to something other than <tab> if you use one of the following:
+" - https://github.com/Valloric/YouCompleteMe
+" - https://github.com/nvim-lua/completion-nvim
+let g:UltiSnipsListSnippets="<C-Up>"
+let g:UltiSnipsExpandTrigger="<C-Down>"
+let g:UltiSnipsJumpForwardTrigger="<C-Right>"
+let g:UltiSnipsJumpBackwardTrigger="<C-Left>"
+
+" If you want :UltiSnipsEdit to split your window.
+let g:UltiSnipsEditSplit="vertical"
+let g:UltiSnipsSnippetDirectories = [$HOME.'/.vim/plugged/vim-snippets/UltiSnips', $HOME.'/.vim/plugged/vim-nayvy/__UltiSnips']
+let g:ultisnips_python_style = "google"
+"""python vim-nayvy
+let g:nayvy_coc_completion_icon = "+"
+let g:nayvy_import_path_format = "all_absolute"
+let g:nayvy_pyproject_root_markers = ['pyproject.toml']
 """ ACK
 " ack.vim --- {{{
 
@@ -869,7 +916,7 @@ nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
 " --vimgrep -> Needed to parse the rg response properly for ack.vim
 " --type-not sql -> Avoid huge sql file dumps as it slows down the search
 " --smart-case -> Search case insensitive if all lowercase pattern, Search case sensitively otherwise
-let g:ackprg = 'rg --vimgrep --type-not sql --smart-case'
+let g:ackprg = 'rg --no-ignore --vimgrep --max-depth=20 --type-not sql --smart-case'
 
 " Auto close the Quickfix list after pressing '<enter>' on a list item
 let g:ack_autoclose = 1

@@ -18,4 +18,4 @@ cd "${HOME}/.local/lib"
 npm install yarn
 ln -sf "$(pwd)/node_modules/yarn/bin/yarn" "${HOME}/.local/bin/"
 
-pip3 install jedi-language-server pylint black isort docformatter
+pip3 install -U jedi-language-server pylint black isort docformatter
