@@ -14,21 +14,14 @@
     },
     "diagnostic-languageserver.linters": {
         "pylint": {
+            "debounce": 500,
             "args": [
                 "--rcfile",
                 "pyproject.toml",
-                "--output-format",
-                "text",
-                "-j",
-                "4",
-                "-d",
-                "E0402",
-                "--score",
-                "no",
+                "-f",
+                "json",
                 "--from-stdin",
-                "--msg-template",
-                "'{line}:{column}:{category}:{msg} ({msg_id}:{symbol})'",
-                "lol", //"%filename"
+                "%filename"
             ],
             "securities": {
                 "informational": "info",
@@ -69,6 +62,10 @@
     },
     "clangd.semanticHighlighting": true,
     "clangd.path": "~/.config/coc/extensions/coc-clangd-data/install/13.0.0/clangd_13.0.0/bin/clangd",
+    //    "clangd.arguments": ["-std=c++17"],
+    "clangd.fallbackFlags": [
+        "-std=c++17"
+    ],
     "jedi.enable": true,
     "jedi.startupMessage": false,
     "jedi.markupKindPreferred": "markdown",
@@ -84,6 +81,8 @@
     "jedi.diagnostics.didSave": true,
     "jedi.workspace.extraPaths": [],
     "yaml.format.enable": true,
+    "yaml.completion": true,
+    "yaml.validate": true,
     "suggest.defaultSortMethod": "alphabetical",
     "suggest.autoTrigger": "always",
     "suggest.minTriggerInputLength": 3,
@@ -111,9 +110,9 @@
         }
     },
     "cSpell.userWords": [
-      "asyncio",
-      "deque",
-      "uart",
-      "unregisters"
+        "asyncio",
+        "deque",
+        "uart",
+        "unregisters"
     ]
 }

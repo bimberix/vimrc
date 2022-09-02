@@ -40,6 +40,7 @@ Plug 'NLKNguyen/papercolor-theme'
 Plug 'lifepillar/vim-gruvbox8'
 Plug 'mileszs/ack.vim'
 Plug 'jlanzarotta/bufexplorer'
+Plug 'peterhoeg/vim-qml'
 "Plug 'chrisbra/SudoEdit.vim'
 "Plug 'Shougo/unite.vim'
 "Plug 'jeetsukumaran/vim-buffergator'
@@ -762,32 +763,54 @@ let g:rainbow_active = 1
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "COC
+"Use <tab> and <S-tab> to navigate completion list: >
 
-" Use tab for trigger completion with characters ahead and navigate.
-" NOTE: Use command ':verbose imap <tab>' to make sure tab is not mapped by
-" other plugin before putting this into your config.
-inoremap <silent><expr> <TAB>
-      \ pumvisible() ? "\<C-n>" :
-      \ <SID>check_back_space() ? "\<TAB>" :
-      \ coc#refresh()
-inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+  function! s:check_back_space() abort
+    let col = col('.') - 1
+    return !col || getline('.')[col - 1]  =~ '\s'
+  endfunction
 
-function! s:check_back_space() abort
-  let col = col('.') - 1
-  return !col || getline('.')[col - 1]  =~# '\s'
-endfunction
+  " Insert <tab> when previous text is space, refresh completion if not.
+ " inoremap <silent><expr> <TAB>
+"	\ coc#pum#visible() ? coc#pum#next(1):
+"	\ <SID>check_back_space() ? "\<Tab>" :
+"	\ coc#refresh()
+  inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
 
-" Use <C-space> to trigger completion.
-inoremap <silent><expr> <C-SPACE> coc#refresh()
+"Use <c-space> to trigger completion: >
 
-" Use <cr> to confirm completion, `<C-g>u` means break undo chain at current
-" position. Coc only does snippet and additional edit on confirm.
-" <cr> could be remapped by other vim plugin, try `:verbose imap <CR>`.
-if exists('*complete_info')
-  inoremap <expr> <cr> complete_info()["selected"] != "-1" ? "\<C-y>" : "\<C-g>u\<CR>"
-else
-  inoremap <expr> <cr> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
-endif
+  if has('nvim')
+    inoremap <silent><expr> <c-space> coc#refresh()
+  else
+    inoremap <silent><expr> <c-@> coc#refresh()
+  endif
+"<
+"Use <CR> to confirm completion, use: >
+
+  inoremap <expr> <cr> coc#pum#visible() ? coc#_select_confirm() : "\<CR>"
+"<
+"To make <CR> to confirm selection of selected complete item or notify coc.nvim
+"to format on enter, use: >
+
+  inoremap <silent><expr> <CR> coc#pum#visible() ? coc#_select_confirm()
+				\: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+
+"Map <tab> for trigger completion, completion confirm, snippet expand and jump
+"like VSCode: >
+
+  inoremap <silent><expr> <TAB>
+    \ coc#pum#visible() ? coc#_select_confirm() :
+    \ coc#expandableOrJumpable() ?
+    \ "\<C-r>=coc#rpc#request('doKeymap', ['snippets-expand-jump',''])\<CR>" :
+    \ <SID>check_back_space() ? "\<TAB>" :
+    \ coc#refresh()
+
+  function! s:check_back_space() abort
+    let col = col('.') - 1
+    return !col || getline('.')[col - 1]  =~# '\s'
+  endfunction
+
+  let g:coc_snippet_next = '<tab>'
 
 " Use `[g` and `]g` to navigate diagnostics
 " Use `:CocDiagnostics` to get all diagnostics of current buffer in location list.
