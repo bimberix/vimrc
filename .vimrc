@@ -46,7 +46,8 @@ Plug 'peterhoeg/vim-qml'
 "Plug 'jeetsukumaran/vim-buffergator'
 "Plug 'roblillack/vim-bufferlist'
 "Plug 'itchyny/calendar.vim'
-"Plug 'puremourning/vimspector', { 'do': 'mkdir -p ../../pack/vimspector/opt/ && ln -sf \"$(pwd)\" ../../pack/vimspector/opt/vimspector' }
+"Plug 'puremourning/vimspector', { 'do': 'mkdir -p ../../pack/vimspector/opt/ && ln -sf \"$(pwd)\" ../../pack/vimspector/opt/vimspector' } 
+Plug 'kergoth/vim-bitbake'
 call plug#end()
 
 "let g:vimspector_enable_mappings = 'NONE'
@@ -58,7 +59,7 @@ packadd termdebug
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "EDITOR
 
-set number                     
+set number
 set noshowmode
 set showtabline=2
 set switchbuf=usetab,newtab
@@ -69,6 +70,10 @@ set noerrorbells
 set tabstop=4 softtabstop=4
 set shiftwidth=4
 set expandtab
+set showbreak=↪\ 
+set listchars=tab:→\ ,eol:↲,nbsp:␣,trail:•,extends:⟩,precedes:⟨
+set list
+
 set smartindent
 "set nowrap
 set smartcase
@@ -115,7 +120,6 @@ endif
 "set breakindent
 "set breakindentopt=sbr
 "set cpoptions+=n
-"let &showbreak=' + »»» »»»'
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "KEY MAPPINGS

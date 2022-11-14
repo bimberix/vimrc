@@ -16,8 +16,8 @@
         "pylint": {
             "debounce": 500,
             "args": [
-                "--rcfile",
-                "pyproject.toml",
+//                "--rcfile",
+//                "pyproject.toml",
                 "-f",
                 "json",
                 "--from-stdin",
@@ -36,16 +36,16 @@
     "diagnostic-languageserver.formatters": {
         "black": {
             "args": [
-                "--config",
-                "pyproject.toml",
+//                "--config",
+//                "pyproject.toml",
                 "--quiet",
                 "-"
             ]
         },
         "isort": {
             "args": [
-                "--sp",
-                "pyproject.toml",
+//                "--sp",
+//                "pyproject.toml",
                 "--quiet",
                 "-"
             ]
@@ -61,11 +61,11 @@
         }
     },
     "clangd.semanticHighlighting": true,
-    "clangd.path": "~/.config/coc/extensions/coc-clangd-data/install/13.0.0/clangd_13.0.0/bin/clangd",
+    "clangd.path": "~/.config/coc/extensions/coc-clangd-data/install/14.0.3/clangd_14.0.3/bin/clangd",
     //    "clangd.arguments": ["-std=c++17"],
-    "clangd.fallbackFlags": [
-        "-std=c++17"
-    ],
+    //"clangd.fallbackFlags": [
+    //    "-std=c++17"
+    //],
     "jedi.enable": true,
     "jedi.startupMessage": false,
     "jedi.markupKindPreferred": "markdown",
@@ -84,7 +84,7 @@
     "yaml.completion": true,
     "yaml.validate": true,
     "suggest.defaultSortMethod": "alphabetical",
-    "suggest.autoTrigger": "always",
+    "suggest.autoTrigger": "none",
     "suggest.minTriggerInputLength": 3,
     "diagnostic.errorSign": "●",
     "diagnostic.warningSign": "▲",
