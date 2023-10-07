@@ -14,28 +14,43 @@ Plug 'neovim/nvim-lspconfig'             " Required
 Plug 'hrsh7th/nvim-cmp'         " Required
 Plug 'hrsh7th/cmp-nvim-lsp'     " Required
 
-" For vsnip users.
-Plug 'hrsh7th/cmp-vsnip'
-Plug 'hrsh7th/vim-vsnip'
+" Snippets
+Plug 'L3MON4D3/LuaSnip'
+Plug 'saadparwaiz1/cmp_luasnip'
 
+" Completion type
+Plug 'onsails/lspkind.nvim'
+
+" Other
 Plug 'majutsushi/tagbar'
 Plug 'mbbill/undotree'
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-dispatch'
 Plug 'airblade/vim-gitgutter'
-Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
-Plug 'junegunn/fzf.vim'
+"Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+"Plug 'junegunn/fzf.vim'
 Plug 'preservim/nerdcommenter'
 Plug 'preservim/nerdtree'
 "Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'itchyny/lightline.vim'
-Plug 'NLKNguyen/papercolor-theme'
+
+" Themes
+"Plug 'NLKNguyen/papercolor-theme'
 Plug 'lifepillar/vim-gruvbox8'
-Plug 'mileszs/ack.vim'
+
+" Fuzzy find plugins
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.3' }
+Plug 'BurntSushi/ripgrep'
+
 Plug 'jlanzarotta/bufexplorer'
 Plug 'peterhoeg/vim-qml'
 Plug 'kergoth/vim-bitbake'
 call plug#end()
 
-source ~/.config/nvim/new.lua
-source ~/.config/nvim/old.vim
+source ~/.config/nvim/core.vim
+source ~/.config/nvim/ui.vim
+source ~/.config/nvim/line.vim
+
+source ~/.config/nvim/find.lua
+source ~/.config/nvim/lsp.lua
