@@ -44,6 +44,19 @@ let g:undotree_HelpLine = 0
 let g:undotree_SetFocusWhenToggle = 1
 
 function! LeftPaneHideOther(opt)
+    for buf in range(1, bufnr('$'))
+        let filetype = getbufvar(buf, '&filetype', 'ERROR')
+        if filetype == 'nerdtree' && bufwinnr(buf) != -1 && a:opt !=# "nerdtree"
+            NERDTreeToggle
+        elseif filetype == 'tagbar' && bufwinnr(buf) != -1 && a:opt !=# "tagbar"
+            TagbarToggle
+        elseif filetype == 'undotree' && bufwinnr(buf) != -1 && a:opt !=# "undotree"
+            UndotreeToggle
+        endif
+    endfor
+endfunction
+
+function! OldLeftPaneHideOther(opt)
     if exists("t:NERDTreeBufName") && bufwinnr(t:NERDTreeBufName) != -1 && a:opt !=# "nerdtree"
         NERDTreeToggle
     elseif exists("t:tagbar_buf_name") && bufwinnr(t:tagbar_buf_name) != -1 && a:opt !=# "tagbar"

@@ -13,13 +13,11 @@ Plug 'neovim/nvim-lspconfig'             " Required
 " Autocompletion
 Plug 'hrsh7th/nvim-cmp'         " Required
 Plug 'hrsh7th/cmp-nvim-lsp'     " Required
+Plug 'ray-x/lsp_signature.nvim'
 
 " Snippets
-Plug 'L3MON4D3/LuaSnip'
+Plug 'L3MON4D3/LuaSnip', {'tag': 'v2.*', 'do': 'make install_jsregexp'}
 Plug 'saadparwaiz1/cmp_luasnip'
-
-" Completion type
-Plug 'onsails/lspkind.nvim'
 
 " Other
 Plug 'majutsushi/tagbar'
@@ -30,8 +28,13 @@ Plug 'airblade/vim-gitgutter'
 "Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 "Plug 'junegunn/fzf.vim'
 Plug 'preservim/nerdcommenter'
+
+" File browser
 Plug 'preservim/nerdtree'
-"Plug 'Xuyuanp/nerdtree-git-plugin'
+Plug 'bimberix/nvim-dirdiff'
+
+
+" Status line
 Plug 'itchyny/lightline.vim'
 
 " Themes
@@ -40,10 +43,13 @@ Plug 'lifepillar/vim-gruvbox8'
 
 " Fuzzy find plugins
 Plug 'nvim-lua/plenary.nvim'
-Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.3' }
+Plug 'nvim-telescope/telescope.nvim', { 'branch': '0.1.x' }
 Plug 'BurntSushi/ripgrep'
 
+" Buffers
 Plug 'jlanzarotta/bufexplorer'
+
+" Syntax
 Plug 'peterhoeg/vim-qml'
 Plug 'kergoth/vim-bitbake'
 call plug#end()

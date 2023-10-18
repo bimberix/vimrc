@@ -62,7 +62,8 @@ set signcolumn=number
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "KEY MAPPINGS
 
-tnoremap <Esc> <C-\><C-n>
+"this preventes escaping embedded editors
+"tnoremap <Esc> <C-\><C-n>
 tmap <silent> <C-w> <C-\><C-n>
 
 
