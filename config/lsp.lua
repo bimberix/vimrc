@@ -256,3 +256,11 @@ lspcfg.lua_ls.setup {
   },
 }
 
+lspcfg.ltex.setup{
+      capabilities = capabilities,
+      settings = {
+          ltex = {
+              language = "en-GB",
+          },
+      },
+}
