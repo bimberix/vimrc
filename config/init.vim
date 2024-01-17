@@ -14,10 +14,13 @@ Plug 'neovim/nvim-lspconfig'             " Required
 Plug 'hrsh7th/nvim-cmp'         " Required
 Plug 'hrsh7th/cmp-nvim-lsp'     " Required
 Plug 'ray-x/lsp_signature.nvim'
+Plug 'windwp/nvim-autopairs'
 
 " Snippets
 Plug 'L3MON4D3/LuaSnip', {'tag': 'v2.*', 'do': 'make install_jsregexp'}
 Plug 'saadparwaiz1/cmp_luasnip'
+Plug 'rafamadriz/friendly-snippets'
+Plug 'honza/vim-snippets'
 
 " Other
 Plug 'majutsushi/tagbar'
