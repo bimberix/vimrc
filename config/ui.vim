@@ -103,7 +103,7 @@ tmap <silent> <F3> <C-w>:call LeftPaneTagbar()<CR>
 nmap <silent> <F4> :call LeftPaneUndotree()<CR>
 tmap <silent> <F4> <C-w>:call LeftPaneUndotree()<CR>
 
-autocmd tableave * call LeftPaneHideOther("")
+"autocmd tableave * call LeftPaneHideOther("")
 
 "bottom pane
 
@@ -180,7 +180,8 @@ function! QuickFixToggle()
     endif
 endfunction
 
-autocmd bufcreate * if IsBufQuickFix(bufnr()) | silent exe 'map <silent> <buffer> <CR> :.cc<CR>' | endif
+"autocmd bufcreate * if IsBufQuickFix(bufnr()) | silent exe 'map <silent> <buffer> <CR> :.cc<CR>' | endif
+autocmd bufcreate * if IsBufQuickFix(bufnr()) | silent exe 'set modifiable' | endif
 
 " Navigate quickfix list with ease
 nnoremap <silent> [q :cprevious<CR>
@@ -233,7 +234,7 @@ endfunction
 nmap <silent> <F5> :call TerminalToggle()<CR>
 tmap <silent> <F5> <C-w>:call TerminalToggle()<CR>
 
-autocmd tableave * call BottomPaneHideOther("") 
+"autocmd tableave * call BottomPaneHideOther("") 
 
 "terminal tab
 

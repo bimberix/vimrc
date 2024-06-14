@@ -27,8 +27,8 @@ set path+=**
 set wildmenu
 set mouse=nvi
 set backspace=indent,eol,start
-set clipboard=unnamed
-set clipboard=unnamedplus
+set clipboard^=unnamed,unnamedplus
+
 set makeprg=/usr/bin/env\ bash\ -ic
 
 "set foldmethod=indent
@@ -83,10 +83,13 @@ set encoding=utf-8
 "THEME
 
 syntax enable
-set t_Co=256
+"set t_Co=256
 set background=dark
 "colorscheme PaperColor
 colorscheme gruvbox8
+
+let g:gruvbox_plugin_hi_groups = 1
+let g:gruvbox_transp_bg = 1
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "NERD COMMENTER

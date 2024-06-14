@@ -4,6 +4,8 @@ function! IsBufTerminal(bufnr)
     return '' != getbufvar(a:bufnr, 'term_title')
 endfunction
 
+let g:tablinesize = 30
+
 let g:lightline = {
 \ 'active': {
 \   'left': [ [ 'mode', 'paste' ],
@@ -171,10 +173,10 @@ function! Lightline_tab_filename(n)
     if tabname == ''
         let tabname = "[No Name]"
     endif
-    if len(tabname) > 15
-        let tabname = strcharpart(tabname, 0, 6) . "..." . strcharpart(tabname, len(tabname) - 6, 6)
-    elseif len(tabname) < 15
-        let tabname = strcharpart(spaces, 0, float2nr(floor((15 - len(tabname))/2.0))) . tabname . strcharpart(spaces, 0, float2nr(ceil((15 - len(tabname))/2.0)))
+    if len(tabname) > g:tablinesize
+        let tabname = strcharpart(tabname, 0, g:tablinesize - 6) . "~" . strcharpart(tabname, len(tabname) - 5, 5)
+    elseif len(tabname) < g:tablinesize
+        let tabname = strcharpart(spaces, 0, float2nr(floor((g:tablinesize - len(tabname))/2.0))) . tabname . strcharpart(spaces, 0, float2nr(ceil((g:tablinesize - len(tabname))/2.0)))
     endif
     return tabname
 endfunction
