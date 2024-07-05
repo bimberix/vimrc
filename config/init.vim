@@ -14,7 +14,7 @@ Plug 'neovim/nvim-lspconfig'             " Required
 Plug 'hrsh7th/nvim-cmp'         " Required
 Plug 'hrsh7th/cmp-nvim-lsp'     " Required
 Plug 'ray-x/lsp_signature.nvim'
-Plug 'windwp/nvim-autopairs'
+"Plug 'windwp/nvim-autopairs'
 
 " Snippets
 Plug 'L3MON4D3/LuaSnip', {'tag': 'v2.*', 'do': 'make install_jsregexp'}
@@ -41,7 +41,7 @@ Plug 'bimberix/nvim-dirdiff'
 Plug 'itchyny/lightline.vim'
 
 " Themes
-"Plug 'NLKNguyen/papercolor-theme'
+Plug 'NLKNguyen/papercolor-theme'
 Plug 'lifepillar/vim-gruvbox8'
 
 " Fuzzy find plugins
@@ -55,6 +55,7 @@ Plug 'jlanzarotta/bufexplorer'
 " Syntax
 Plug 'peterhoeg/vim-qml'
 Plug 'kergoth/vim-bitbake'
+Plug 'nvim-treesitter/nvim-treesitter'
 call plug#end()
 
 source ~/.config/nvim/core.vim
