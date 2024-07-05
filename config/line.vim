@@ -1,9 +1,5 @@
 set laststatus=2
 
-function! IsBufTerminal(bufnr)
-    return '' != getbufvar(a:bufnr, 'term_title')
-endfunction
-
 let g:tablinesize = 30
 
 let g:lightline = {

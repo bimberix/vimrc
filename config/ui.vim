@@ -4,6 +4,14 @@ function! IsBufVisible(buf)
     return a:buf != -1 && bufwinnr(a:buf) != -1
 endfunction
 
+function! IsBufValid(buf)
+    return nvim_buf_is_valid(a:buf)
+endfunction
+
+function! IsBufEmpty(buf)
+    return nvim_buf_get_name(a:buf) == "" && nvim_buf_line_count(a:buf)
+endfunction
+
 function! HideBuf(buf)
     if IsBufVisible(a:buf)
         exe bufwinnr(a:buf) . 'hide'
@@ -30,6 +38,7 @@ let g:leftPaneWidth = 31
 let NERDTreeShowHidden = 1
 let NERDTreeMinimalUI = 1
 let NERDTreeDirArrows = 1
+let NERDTreeCustomOpenArgs={'file':{'reuse': 'all', 'where': 't'}}
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "TAGBAR
@@ -43,56 +52,86 @@ let g:undotree_SplitWidth = g:leftPaneWidth
 let g:undotree_HelpLine = 0
 let g:undotree_SetFocusWhenToggle = 1
 
-function! LeftPaneHideOther(opt)
+function! HideOtherPanes(bufnr)
     for buf in range(1, bufnr('$'))
-        let filetype = getbufvar(buf, '&filetype', 'ERROR')
-        if filetype == 'nerdtree' && bufwinnr(buf) != -1 && a:opt !=# "nerdtree"
-            NERDTreeToggle
-        elseif filetype == 'tagbar' && bufwinnr(buf) != -1 && a:opt !=# "tagbar"
-            TagbarToggle
-        elseif filetype == 'undotree' && bufwinnr(buf) != -1 && a:opt !=# "undotree"
-            UndotreeToggle
+        if IsBufValid(buf) && buf != a:bufnr && (IsBufBottomPane(buf) || IsBufLeftPane(buf)) && IsBufVisible(buf)
+            call HideBuf(buf)
         endif
     endfor
 endfunction
 
-function! OldLeftPaneHideOther(opt)
-    if exists("t:NERDTreeBufName") && bufwinnr(t:NERDTreeBufName) != -1 && a:opt !=# "nerdtree"
-        NERDTreeToggle
-    elseif exists("t:tagbar_buf_name") && bufwinnr(t:tagbar_buf_name) != -1 && a:opt !=# "tagbar"
-        TagbarToggle
-    elseif exists("t:undotree") && t:undotree.IsVisible() && a:opt !=# "undotree"
-        UndotreeToggle
-    endif
+function! HideNoNameBufs()
+    for buf in range(1, bufnr('$'))
+        if IsBufValid(buf) && IsBufEmpty(buf)
+            call HideBuf(buf)
+        endif
+    endfor
+endfunction
+
+function! IsBufLeftPane(bufnr)
+    return IsBufNERDTree(a:bufnr) || IsBufTagbar(a:bufnr) || IsBufUndotree(a:bufnr)
+endfunction
+
+function! IsBufNERDTree(bufnr)
+    let filetype = getbufvar(a:bufnr, '&filetype', 'ERROR')
+    return filetype == 'nerdtree'
+endfunction
+
+function! IsBufTagbar(bufnr)
+    let filetype = getbufvar(a:bufnr, '&filetype', 'ERROR')
+    return filetype == 'tagbar'
+endfunction
+
+function! IsBufUndotree(bufnr)
+    let filetype = getbufvar(a:bufnr, '&filetype', 'ERROR')
+    return filetype == 'undotree'
 endfunction
 
 function! LeftPaneNERDTree()
-    call LeftPaneHideOther("nerdtree")
-    if exists("t:NERDTreeBufName")
-        NERDTreeToggle
+    let bufnr = -1
+    if exists('t:NERDTreeBufName')
+        let bufnr = GetBufNrByName(t:NERDTreeBufName)
+    endif
+    if IsBufVisible(bufnr)
+        call HideBuf(bufnr)
     else
-        silent NERDTreeMirror
+        call HideOtherPanes(bufnr)
         NERDTreeFocus
+        silent exe 'vertical resize ' . g:leftPaneWidth
     endif
     call lightline#update()
 endfunction
 
 function! LeftPaneTagbar()
-    call LeftPaneHideOther("tagbar")
-    if exists("t:tagbar_buf_name") && bufwinnr(t:tagbar_buf_name) != -1
-        TagbarToggle
+    let g:tagbar_width = g:leftPaneWidth
+    let bufnr = -1
+    if exists('t:tagbar_buf_name')
+        let bufnr = GetBufNrByName(t:tagbar_buf_name)
+    endif
+    if IsBufVisible(bufnr)
+        call HideBuf(bufnr)
     else
+        call HideOtherPanes(bufnr)
         TagbarOpen fj
+        silent exe 'vertical resize ' . g:leftPaneWidth
     endif
     call lightline#update()
 endfunction
 
 function! LeftPaneUndotree()
-    call LeftPaneHideOther("undotree")
-    if exists("t:undotree")
-        UndotreeToggle
+    let g:undotree_SplitWidth = g:leftPaneWidth
+    let bufnr = -1
+    if exists('t:undotree') && exists('t:undotree.bufname')
+        let bufnr = GetBufNrByName(t:undotree.bufname)
+    endif
+    if IsBufVisible(bufnr)
+        call HideBuf(bufnr)
     else
+        call HideOtherPanes(bufnr)
         UndotreeShow
+        silent exe 'vertical resize ' . g:leftPaneWidth
+        wincmd l
+        wincmd h
     endif
 endfunction
 
@@ -103,28 +142,28 @@ tmap <silent> <F3> <C-w>:call LeftPaneTagbar()<CR>
 nmap <silent> <F4> :call LeftPaneUndotree()<CR>
 tmap <silent> <F4> <C-w>:call LeftPaneUndotree()<CR>
 
-"autocmd tableave * call LeftPaneHideOther("")
+autocmd TabLeave * call HideOtherPanes(-1)
+autocmd TabEnter * call HideNoNameBufs()
+
+"autocmd BufEnter * if IsBufLeftPane(bufnr()) | silent exe 'vertical resize ' . g:leftPaneWidth | endif
+autocmd BufLeave * let buf = bufnr() | if IsBufLeftPane(buf) | let g:leftPaneWidth = winwidth(bufwinnr(buf)) | endif
 
 "bottom pane
 
 let g:bottomPaneHeight = 12
 
-function! BottomPaneHideOther(opt)
-    for buf in range(1, bufnr('$'))
-        if bufname(buf) == '[BufExplorer]' && bufwinnr(buf) != -1 && a:opt !=# "bufexplorer"
-            call HideBuf(buf)
-        elseif getbufvar(buf, 'current_syntax') == 'qf' && a:opt !=# "quickfix"
-            call HideBuf(buf)
-        elseif ((!has('nvim') && bufname(buf) == '!/bin/bash') || (has('nvim') && bufname(buf) =~ '^term://.*/usr/bin/env bash')) && a:opt !=# "terminal"
-            call HideBuf(buf)
-        endif
-    endfor
+function! IsBufBottomPane(bufnr)
+    return IsBufBufExplorer(a:bufnr) || IsBufQuickFix(a:bufnr) || IsBufTerminal(a:bufnr)
 endfunction
 
 "buflist pane
 let g:bufExplorerSplitHorzSize = g:bottomPaneHeight
 let g:bufExplorerDisableDefaultKeyMapping = 1
 let g:bufExplorerDefaultHelp = 0
+
+function! IsBufBufExplorer(buf)
+    return bufname(a:buf) == '[BufExplorer]'
+endfunction
 
 function! BufExplorerReload()
     unlet g:bufexplorer_version
@@ -138,8 +177,9 @@ function! BufExplorerToggle()
     if IsBufVisible(bufnr)
         ToggleBufExplorer
     else
-        call BottomPaneHideOther("bufexplorer")
+        call HideOtherPanes(bufnr)
         wincmd b
+        let g:bufExplorerSplitHorzSize = g:bottomPaneHeight
         BufExplorerHorizontalSplit
         let bufnr = GetBufNrByName('\[BufExplorer\]')
         if !IsBufVisible(bufnr)
@@ -171,24 +211,38 @@ endfunction
 function! QuickFixToggle()
     let bufnr = GetQuickFixBufNr()
     if IsBufVisible(bufnr)
-        cclose
+        call HideBuf(bufnr)
     else
-        call BottomPaneHideOther("quickfix")
-        silent exe 'copen ' . g:bottomPaneHeight
-        set ma
-        wincmd J
+        call HideOtherPanes(bufnr)
+        lua vim.diagnostic.setqflist()
+        if IsBufQuickFix(bufnr())
+            silent exe 'resize ' . g:bottomPaneHeight
+            set modifiable
+        endif
     endif
+
+
+    "if IsBufVisible(bufnr)
+        "cclose
+    "else
+        "call HideOtherPanes(bufnr)
+        "silent exe 'copen ' . g:bottomPaneHeight
+        "set ma
+        "wincmd J
+    "endif
 endfunction
 
 "autocmd bufcreate * if IsBufQuickFix(bufnr()) | silent exe 'map <silent> <buffer> <CR> :.cc<CR>' | endif
-autocmd bufcreate * if IsBufQuickFix(bufnr()) | silent exe 'set modifiable' | endif
+"autocmd BufCreate,BufEnter * if IsBufQuickFix(bufnr()) | silent exe 'set modifiable' | endif
+"autocmd BufWinEnter * if IsBufBottomPane(bufnr()) | silent exe 'resize ' . g:bottomPaneHeight | endif
+autocmd BufLeave * if IsBufBottomPane(bufnr()) | let g:bottomPaneHeight = winheight(bufwinnr(bufnr())) | endif
 
 " Navigate quickfix list with ease
 nnoremap <silent> [q :cprevious<CR>
 nnoremap <silent> ]q :cnext<CR>
 
 function! MyMake(task)
-    call BottomPaneHideOther("quickfix")
+    "call BottomPaneHideOther("quickfix")
     silent exe 'Make! ' . a:task
     Copen!
     silent exe bufwinnr(GetQuickFixBufNr()) . 'resize ' . g:bottomPaneHeight
@@ -204,68 +258,51 @@ tmap <silent> <F6> <C-w>:call QuickFixToggle()<CR>
 
 "terminal pane
 
+let g:terminal_pane_bufname = 'terminal_pane'
+
+function! IsBufTerminal(buf)
+    return nvim_buf_get_name(a:buf) =~ g:terminal_pane_bufname
+endfunction
+
 function! TerminalToggle()
-    if !has('nvim')
-        let term_bufnr = GetBufNrByName('!/bin/bash')
-    else
-        let term_bufnr = GetBufNrByName('^term://.*/usr/bin/env bash')
-    endif
+    let term_bufnr = GetBufNrByName(g:terminal_pane_bufname)
+
     if !HideBuf(term_bufnr)
-        call BottomPaneHideOther("terminal")
+        call HideOtherPanes(term_bufnr)
         wincmd b
         if term_bufnr != -1
             silent exe g:bottomPaneHeight . 'split #' . term_bufnr
-            startinsert
         else
-            if !has('nvim')
-                terminal
-                silent exe 'resize ' . g:bottomPaneHeight
-            else
-                silent exe g:bottomPaneHeight . 'split term:///usr/bin/env bash'
-                setlocal nonumber
-                startinsert
-            endif
+            silent exe g:bottomPaneHeight . 'split term:///usr/bin/env bash'
+            call nvim_buf_set_name(0, g:terminal_pane_bufname)
         endif
         set nonumber
-        wincmd J
+        startinsert
     endif
 endfunction
 
 nmap <silent> <F5> :call TerminalToggle()<CR>
 tmap <silent> <F5> <C-w>:call TerminalToggle()<CR>
 
-"autocmd tableave * call BottomPaneHideOther("") 
+"autocmd tableave * call BottomPaneHideOther(-1) 
 
 "terminal tab
 
 function! OpenTerminal()
     $tabnew
-    if !has('nvim')
-        call term_start(&shell, {'term_name': 'shell', 'term_finish': 'close', 'curwin': 1, 'norestore': 1})
-    else
-        terminal
-        setlocal nonumber
-        startinsert
-    endif
+    terminal
+    setlocal nonumber
+    startinsert
 endfunction
 
-if !has('nvim')
-    nmap <silent> <S-F5> :call OpenTerminal()<CR>
-    tmap <silent> <S-F5> <C-w>:call OpenTerminal()<CR>
-else
-    nmap <silent> <F17> :call OpenTerminal()<CR>
-    tmap <silent> <F17> <C-w>:call OpenTerminal()<CR>
-endif
+nmap <silent> <F17> :call OpenTerminal()<CR>
+tmap <silent> <F17> <C-w>:call OpenTerminal()<CR>
+
 "midnight commander
 
 function! OpenMC()
-    if !has('nvim')
-        let name = "Midnight Commander"
-    else
-        let name = "^term://.*:mc --skin=gotar"
-    endif
+    let name = "midnight_commander"
     let bufnr = GetBufNrByName(name)
-    
     if bufnr != -1
         for i in range(tabpagenr("$"))
             if index(tabpagebuflist(i + 1), bufnr) != -1
@@ -280,13 +317,10 @@ function! OpenMC()
     endif
 
     $tabnew
-    if !has('nvim')
-        call term_start('mc --skin=gotar', {'term_name': name, 'term_finish': 'close', 'curwin': 1, 'norestore': 1})
-    else
-        call termopen('mc --skin=gotar')
-        setlocal nonumber
-        startinsert
-    endif
+    call termopen('mc --skin=gotar')
+    setlocal nonumber
+    startinsert
+    call nvim_buf_set_name(0, name)
 endfunction
 
 nmap <silent> <F8> :call OpenMC()<CR>

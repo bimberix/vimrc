@@ -7,6 +7,33 @@ vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist)
 
+function open_in_tab(cmd)
+    local curr_tab = vim.api.nvim_tabpage_get_number(0)
+    local curr_buf = vim.api.nvim_buf_get_number(0)
+
+    cmd(params, { reuse_win = true })
+
+    vim.wait(200, function() end)
+    if not (0 == vim.fn.IsBufQuickFix(vim.fn.bufnr())) then
+        vim.api.nvim_command('set modifiable')
+        vim.fn.HideOtherPanes(vim.fn.bufnr())
+        vim.api.nvim_command('resize ' .. vim.api.nvim_eval('g:bottomPaneHeight'))
+    else
+        local new_tab = vim.api.nvim_tabpage_get_number(0)
+        local new_buf = vim.api.nvim_buf_get_number(0)
+        if (curr_tab == new_tab) and not (curr_buf == new_buf) then
+            -- Create a new tab for the original file
+            vim.api.nvim_command('-tabnew %')
+
+            -- Restore the cursor position
+            vim.api.nvim_command('b ' .. curr_buf)
+
+            -- Switch to the original tab
+            vim.api.nvim_command('normal! gt')
+        end
+    end
+end
+
 -- Use LspAttach autocommand to only map the following keys
 -- after the language server attaches to the current buffer
 vim.api.nvim_create_autocmd('LspAttach', {
@@ -18,33 +45,11 @@ vim.api.nvim_create_autocmd('LspAttach', {
         -- Buffer local mappings.
         -- See `:help vim.lsp.*` for documentation on any of the below functions
         local opts = { buffer = ev.buf }
-        vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
-        vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
-        --vim.keymap.set('n', 'gd', function()
-                --local org_path = vim.api.nvim_buf_get_name(0)
-
-                ---- Go to definition:
-                --vim.lsp.buf.definition()
-                ----vim.api.nvim_command('normal gd')
-
-                ---- Wait LSP server response
-                --vim.wait(100, function() end)
-
-                --local new_path = vim.api.nvim_buf_get_name(0)
-                --if not (org_path == new_path) then
-                    ---- Create a new tab for the original file
-                    --vim.api.nvim_command('0tabnew %')
-
-                    ---- Restore the cursor position
-                    --vim.api.nvim_command('b ' .. org_path)
-                    --vim.api.nvim_command('normal! `"')
-
-                    ---- Switch to the original tab
-                    --vim.api.nvim_command('normal! gt')
-                --end
-            --end, opts)
+        vim.keymap.set('n', 'gD', function() open_in_tab(vim.lsp.buf.declaration) end, opts)
+        --vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+        vim.keymap.set('n', 'gd', function() open_in_tab(vim.lsp.buf.definition) end, opts)
         vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
-        vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
+        vim.keymap.set('n', 'gi', function() open_in_tab(vim.lsp.buf.implementation) end, opts)
         vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, opts)
         vim.keymap.set('n', '<leader>wa', vim.lsp.buf.add_workspace_folder, opts)
         vim.keymap.set('n', '<leader>wr', vim.lsp.buf.remove_workspace_folder, opts)
@@ -54,7 +59,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
         vim.keymap.set('n', '<leader>D', vim.lsp.buf.type_definition, opts)
         vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
         vim.keymap.set({ 'n', 'v' }, '<leader>ca', vim.lsp.buf.code_action, opts)
-        vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
+        vim.keymap.set('n', 'gr', function() open_in_tab(vim.lsp.buf.references) end, opts)
         vim.keymap.set('n', '<leader>f', function()
             vim.lsp.buf.format { async = true }
         end, opts)
@@ -233,6 +238,16 @@ vim.diagnostic.config({
     },
 })
 
+--quickfix fianostics
+--require("diaglist").init({
+    ---- optional settings
+    ---- below are defaults
+    --debug = false, 
+
+    ---- increase for noisy servers
+    --debounce_ms = 300,
+--})
+
 --Show line diagnostics automatically in hover window
 vim.o.updatetime = 250
 vim.cmd [[autocmd CursorHold * lua vim.diagnostic.open_float(nil, {focus=false})]]
@@ -283,6 +298,12 @@ lspcfg.rust_analyzer.setup{
     ['rust-analyzer'] = {
       diagnostics = {
         enable = false;
+      },
+      cargo = {
+        extraEnv = {
+            CARGO_HOME = "",
+            APMF_BUILD_ROOT = ""
+        }
       }
     }
   }

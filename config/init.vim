@@ -14,13 +14,17 @@ Plug 'neovim/nvim-lspconfig'             " Required
 Plug 'hrsh7th/nvim-cmp'         " Required
 Plug 'hrsh7th/cmp-nvim-lsp'     " Required
 Plug 'ray-x/lsp_signature.nvim'
-"Plug 'windwp/nvim-autopairs'
+Plug 'windwp/nvim-autopairs'
+
+" Diagnostics
+Plug 'onsails/diaglist.nvim'
+"Plug 'folke/trouble.nvim'
 
 " Snippets
 Plug 'L3MON4D3/LuaSnip', {'tag': 'v2.*', 'do': 'make install_jsregexp'}
 Plug 'saadparwaiz1/cmp_luasnip'
-Plug 'rafamadriz/friendly-snippets'
-Plug 'honza/vim-snippets'
+"Plug 'rafamadriz/friendly-snippets'
+"Plug 'honza/vim-snippets'
 
 " Other
 Plug 'majutsushi/tagbar'
@@ -55,7 +59,7 @@ Plug 'jlanzarotta/bufexplorer'
 " Syntax
 Plug 'peterhoeg/vim-qml'
 Plug 'kergoth/vim-bitbake'
-Plug 'nvim-treesitter/nvim-treesitter'
+"Plug 'nvim-treesitter/nvim-treesitter'
 call plug#end()
 
 source ~/.config/nvim/core.vim
