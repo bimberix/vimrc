@@ -143,7 +143,7 @@ cmp.setup({
         { name = 'buffer' },
     }),
     completion = { completeopt = "menu,menuone,noinsert" },
-    experimental = { ghost_text = true },
+    experimental = { ghost_text = false },
 })
 
 --[[
@@ -301,8 +301,14 @@ lspcfg.rust_analyzer.setup{
       },
       cargo = {
         extraEnv = {
-            CARGO_HOME = "",
-            APMF_BUILD_ROOT = ""
+            CARGO_HOME = "/local/home/simipiot/workspace/tv-stable/build-kara-debug/tmp/work/kara-poky-linux-gnueabi/app-framework-rust/1.0-r0/cargo_home",
+            APMF_BUILD_ROOT = "/local/home/simipiot/workspace/VegaBuilaAppframework/mainline/src/VegaAppFramework/private/cargo-project"
+        }
+      },
+      check = {
+        extraEnv = {
+            CARGO_HOME = "/local/home/simipiot/workspace/tv-stable/build-kara-debug/tmp/work/kara-poky-linux-gnueabi/app-framework-rust/1.0-r0/cargo_home",
+            APMF_BUILD_ROOT = "/local/home/simipiot/workspace/VegaBuilaAppframework/mainline/src/VegaAppFramework/private/cargo-project"
         }
       }
     }
