@@ -96,7 +96,7 @@ function! LeftPaneNERDTree()
         call HideBuf(bufnr)
     else
         call HideOtherPanes(bufnr)
-        NERDTreeFocus
+        NERDTreeMirror | NERDTreeFocus
         silent exe 'vertical resize ' . g:leftPaneWidth
     endif
     call lightline#update()
@@ -258,14 +258,21 @@ tmap <silent> <F6> <C-w>:call QuickFixToggle()<CR>
 
 "terminal pane
 
-let g:terminal_pane_bufname = 'terminal_pane'
-
 function! IsBufTerminal(buf)
-    return nvim_buf_get_name(a:buf) =~ g:terminal_pane_bufname
+    return getbufvar(a:buf, "pane") == "true" && getbufvar(a:buf, "term_title", "ERROR") != "ERROR"
+endfunction
+
+function! GetTerminalBufNr()
+    for buf in range(1, bufnr('$'))
+        if IsBufTerminal(buf) 
+            return buf
+        endif
+    endfor
+    return -1 
 endfunction
 
 function! TerminalToggle()
-    let term_bufnr = GetBufNrByName(g:terminal_pane_bufname)
+    let term_bufnr = GetTerminalBufNr()
 
     if !HideBuf(term_bufnr)
         call HideOtherPanes(term_bufnr)
@@ -274,7 +281,7 @@ function! TerminalToggle()
             silent exe g:bottomPaneHeight . 'split #' . term_bufnr
         else
             silent exe g:bottomPaneHeight . 'split term:///usr/bin/env bash'
-            call nvim_buf_set_name(0, g:terminal_pane_bufname)
+            call nvim_buf_set_var(0, "pane", "true")
         endif
         set nonumber
         startinsert

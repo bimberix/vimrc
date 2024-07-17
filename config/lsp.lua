@@ -143,7 +143,7 @@ cmp.setup({
         { name = 'buffer' },
     }),
     completion = { completeopt = "menu,menuone,noinsert" },
-    experimental = { ghost_text = true },
+    experimental = { ghost_text = false },
 })
 
 --[[
@@ -300,6 +300,12 @@ lspcfg.rust_analyzer.setup{
         enable = false;
       },
       cargo = {
+        extraEnv = {
+            CARGO_HOME = "",
+            APMF_BUILD_ROOT = ""
+        }
+      },
+      check = {
         extraEnv = {
             CARGO_HOME = "",
             APMF_BUILD_ROOT = ""
