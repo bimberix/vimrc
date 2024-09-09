@@ -1,3 +1,5 @@
+local custom = require('custom')
+
 -- https://github.com/neovim/nvim-lspconfig#suggested-configuration
 --
 -- Global mappings.
@@ -240,12 +242,12 @@ vim.diagnostic.config({
 
 --quickfix fianostics
 --require("diaglist").init({
-    ---- optional settings
-    ---- below are defaults
-    --debug = false, 
+---- optional settings
+---- below are defaults
+--debug = false,
 
-    ---- increase for noisy servers
-    --debounce_ms = 300,
+---- increase for noisy servers
+--debounce_ms = 300,
 --})
 
 --Show line diagnostics automatically in hover window
@@ -260,7 +262,7 @@ local lspcfg = require "lspconfig"
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities.textDocument.completion.completionItem.snippetSupport = true
 capabilities.textDocument.completion.completionItem.resolveSupport = {
-  properties = { "documentation", "detail", "additionalTextEdits" },
+    properties = { "documentation", "detail", "additionalTextEdits" },
 }
 -- Replace <YOUR_LSP_SERVER> with each lsp server you've enabled.
 
@@ -293,29 +295,29 @@ lspcfg.clangd.setup {
     cmd = { "clangd", "--enable-config" }
 }
 
-lspcfg.rust_analyzer.setup{
-      settings = {
-    ['rust-analyzer'] = {
-      diagnostics = {
-        enable = false;
-      },
-      cargo = {
-        extraEnv = {
-            CARGO_HOME = "",
-            APMF_BUILD_ROOT = ""
+lspcfg.rust_analyzer.setup {
+    settings = {
+        ['rust-analyzer'] = {
+            diagnostics = {
+                enable = false,
+            },
+            cargo = {
+                extraEnv = {
+                    CARGO_HOME = custom.cargoHome,
+                    APMF_BUILD_ROOT = custom.apmfBuildRoot,
+                }
+            },
+            check = {
+                extraEnv = {
+                    CARGO_HOME = custom.cargoHome,
+                    APMF_BUILD_ROOT = custom.apmfBuildRoot,
+                }
+            }
         }
-      },
-      check = {
-        extraEnv = {
-            CARGO_HOME = "",
-            APMF_BUILD_ROOT = ""
-        }
-      }
     }
-  }
 }
 
-require'lspconfig'.cmake.setup{}
+require 'lspconfig'.cmake.setup {}
 
 lspcfg.gopls.setup {
     capabilities = capabilities,
