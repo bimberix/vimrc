@@ -1,5 +1,3 @@
-local custom = require('custom')
-
 -- https://github.com/neovim/nvim-lspconfig#suggested-configuration
 --
 -- Global mappings.
@@ -47,11 +45,11 @@ vim.api.nvim_create_autocmd('LspAttach', {
         -- Buffer local mappings.
         -- See `:help vim.lsp.*` for documentation on any of the below functions
         local opts = { buffer = ev.buf }
-        vim.keymap.set('n', 'gD', function() open_in_tab(vim.lsp.buf.declaration) end, opts)
-        --vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
-        vim.keymap.set('n', 'gd', function() open_in_tab(vim.lsp.buf.definition) end, opts)
+        vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
+        vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+        --vim.keymap.set('n', 'gd', function() open_in_tab(vim.lsp.buf.definition) end, opts)
         vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
-        vim.keymap.set('n', 'gi', function() open_in_tab(vim.lsp.buf.implementation) end, opts)
+        vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
         vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, opts)
         vim.keymap.set('n', '<leader>wa', vim.lsp.buf.add_workspace_folder, opts)
         vim.keymap.set('n', '<leader>wr', vim.lsp.buf.remove_workspace_folder, opts)
@@ -61,7 +59,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
         vim.keymap.set('n', '<leader>D', vim.lsp.buf.type_definition, opts)
         vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
         vim.keymap.set({ 'n', 'v' }, '<leader>ca', vim.lsp.buf.code_action, opts)
-        vim.keymap.set('n', 'gr', function() open_in_tab(vim.lsp.buf.references) end, opts)
+        vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
         vim.keymap.set('n', '<leader>f', function()
             vim.lsp.buf.format { async = true }
         end, opts)
@@ -303,14 +301,14 @@ lspcfg.rust_analyzer.setup {
             },
             cargo = {
                 extraEnv = {
-                    CARGO_HOME = custom.cargoHome,
-                    APMF_BUILD_ROOT = custom.apmfBuildRoot,
+                    CARGO_HOME = LspConfiguration.cargoHome,
+                    APMF_BUILD_ROOT = LspConfiguration.apmfBuildRoot,
                 }
             },
             check = {
                 extraEnv = {
-                    CARGO_HOME = custom.cargoHome,
-                    APMF_BUILD_ROOT = custom.apmfBuildRoot,
+                    CARGO_HOME = LspConfiguration.cargoHome,
+                    APMF_BUILD_ROOT = LspConfiguration.apmfBuildRoot,
                 }
             }
         }

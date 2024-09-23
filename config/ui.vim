@@ -38,7 +38,7 @@ let g:leftPaneWidth = 31
 let NERDTreeShowHidden = 1
 let NERDTreeMinimalUI = 1
 let NERDTreeDirArrows = 1
-let NERDTreeCustomOpenArgs={'file':{'reuse': 'all', 'where': 't'}}
+"let NERDTreeCustomOpenArgs={'file':{'where': 't', 'reuse': 'all'}}
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "TAGBAR
@@ -96,7 +96,10 @@ function! LeftPaneNERDTree()
         call HideBuf(bufnr)
     else
         call HideOtherPanes(bufnr)
-        NERDTreeMirror | NERDTreeFocus
+        silent exe 'NERDTreeMirror'
+        if !IsBufVisible(bufnr)
+            NERDTreeFocus
+        endif
         silent exe 'vertical resize ' . g:leftPaneWidth
     endif
     call lightline#update()
@@ -137,6 +140,7 @@ endfunction
 
 nmap <silent> <F2> :call LeftPaneNERDTree()<CR>
 tmap <silent> <F2> <C-w>:call LeftPaneNERDTree()<CR>
+nmap <silent> <F14> :NERDTreeFind<CR>
 nmap <silent> <F3> :call LeftPaneTagbar()<CR>
 tmap <silent> <F3> <C-w>:call LeftPaneTagbar()<CR>
 nmap <silent> <F4> :call LeftPaneUndotree()<CR>

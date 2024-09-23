@@ -62,6 +62,7 @@ Plug 'kergoth/vim-bitbake'
 "Plug 'nvim-treesitter/nvim-treesitter'
 call plug#end()
 
+source ~/.config/nvim/custom.lua
 source ~/.config/nvim/core.vim
 source ~/.config/nvim/ui.vim
 source ~/.config/nvim/line.vim
