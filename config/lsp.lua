@@ -268,21 +268,32 @@ capabilities.textDocument.completion.completionItem.resolveSupport = {
 
 
 -- https://github.com/python-lsp/python-lsp-server/blob/develop/CONFIGURATION.md
+-- https://jdhao.github.io/2023/07/22/neovim-pylsp-setup/
 lspcfg.pylsp.setup {
-    capabilities = capabilities,
     settings = {
         pylsp = {
             plugins = {
-                pycodestyle = {
-                    ignore = { 'W391' },
-                    maxLineLength = 120
-                },
-                autopep8 = {
-                    enabled = false,
-                },
-            }
-        }
-    }
+                -- formatter options
+                black = { enabled = true },
+                autopep8 = { enabled = false },
+                yapf = { enabled = false },
+                -- linter options
+                pylint = { enabled = true, executable = "pylint" },
+                pyflakes = { enabled = false },
+                pycodestyle = { enabled = false },
+                -- type checker
+                pylsp_mypy = { enabled = true },
+                -- auto-completion options
+                jedi_completion = { fuzzy = true },
+                -- import sorting
+                pyls_isort = { enabled = true },
+            },
+        },
+    },
+    flags = {
+        debounce_text_changes = 200,
+    },
+    capabilities = capabilities,
 }
 
 lspcfg.bashls.setup {
@@ -290,7 +301,7 @@ lspcfg.bashls.setup {
 }
 lspcfg.clangd.setup {
     capabilities = capabilities,
-    cmd = { "clangd", "--enable-config" }
+    cmd = { "clangd", "--enable-config", "--header-insertion=iwyu" }
 }
 
 lspcfg.rust_analyzer.setup {

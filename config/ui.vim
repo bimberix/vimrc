@@ -60,6 +60,22 @@ function! HideOtherPanes(bufnr)
     endfor
 endfunction
 
+function! HideLeftPanes()
+    for buf in range(1, bufnr('$'))
+        if IsBufValid(buf) && IsBufLeftPane(buf) && IsBufVisible(buf)
+            call HideBuf(buf)
+        endif
+    endfor
+endfunction
+
+function! HideBottomPanes()
+    for buf in range(1, bufnr('$'))
+        if IsBufValid(buf) && IsBufBottomPane(buf) && IsBufVisible(buf)
+            call HideBuf(buf)
+        endif
+    endfor
+endfunction
+
 function! HideNoNameBufs()
     for buf in range(1, bufnr('$'))
         if IsBufValid(buf) && IsBufEmpty(buf)
@@ -87,18 +103,23 @@ function! IsBufUndotree(bufnr)
     return filetype == 'undotree'
 endfunction
 
-function! LeftPaneNERDTree()
+function! LeftPaneNERDTree(findfile)
     let bufnr = -1
+    let filepath = expand('%:p')
     if exists('t:NERDTreeBufName')
         let bufnr = GetBufNrByName(t:NERDTreeBufName)
     endif
     if IsBufVisible(bufnr)
         call HideBuf(bufnr)
     else
-        call HideOtherPanes(bufnr)
+        call HideLeftPanes()
         silent exe 'NERDTreeMirror'
         if !IsBufVisible(bufnr)
             NERDTreeFocus
+        endif
+        if a:findfile && filepath != ''
+            silent exe 'NERDTreeFind ' . filepath
+            echo filepath
         endif
         silent exe 'vertical resize ' . g:leftPaneWidth
     endif
@@ -114,7 +135,7 @@ function! LeftPaneTagbar()
     if IsBufVisible(bufnr)
         call HideBuf(bufnr)
     else
-        call HideOtherPanes(bufnr)
+        call HideLeftPanes()
         TagbarOpen fj
         silent exe 'vertical resize ' . g:leftPaneWidth
     endif
@@ -130,7 +151,7 @@ function! LeftPaneUndotree()
     if IsBufVisible(bufnr)
         call HideBuf(bufnr)
     else
-        call HideOtherPanes(bufnr)
+        call HideLeftPanes()
         UndotreeShow
         silent exe 'vertical resize ' . g:leftPaneWidth
         wincmd l
@@ -138,9 +159,9 @@ function! LeftPaneUndotree()
     endif
 endfunction
 
-nmap <silent> <F2> :call LeftPaneNERDTree()<CR>
-tmap <silent> <F2> <C-w>:call LeftPaneNERDTree()<CR>
-nmap <silent> <F14> :NERDTreeFind<CR>
+nmap <silent> <F2> :call LeftPaneNERDTree(0)<CR>
+tmap <silent> <F2> <C-w>:call LeftPaneNERDTree(0)<CR>
+nmap <silent> <F14> :call LeftPaneNERDTree(1)<CR>
 nmap <silent> <F3> :call LeftPaneTagbar()<CR>
 tmap <silent> <F3> <C-w>:call LeftPaneTagbar()<CR>
 nmap <silent> <F4> :call LeftPaneUndotree()<CR>
@@ -181,7 +202,7 @@ function! BufExplorerToggle()
     if IsBufVisible(bufnr)
         ToggleBufExplorer
     else
-        call HideOtherPanes(bufnr)
+        call HideBottomPanes()
         wincmd b
         let g:bufExplorerSplitHorzSize = g:bottomPaneHeight
         BufExplorerHorizontalSplit
@@ -217,8 +238,10 @@ function! QuickFixToggle()
     if IsBufVisible(bufnr)
         call HideBuf(bufnr)
     else
-        call HideOtherPanes(bufnr)
-        lua vim.diagnostic.setqflist()
+        call HideBottomPanes()
+        lua vim.diagnostic.setloclist()
+        "for all buffers
+        "lua vim.diagnostic.setqflist()
         if IsBufQuickFix(bufnr())
             silent exe 'resize ' . g:bottomPaneHeight
             set modifiable
@@ -237,7 +260,7 @@ function! QuickFixToggle()
 endfunction
 
 "autocmd bufcreate * if IsBufQuickFix(bufnr()) | silent exe 'map <silent> <buffer> <CR> :.cc<CR>' | endif
-"autocmd BufCreate,BufEnter * if IsBufQuickFix(bufnr()) | silent exe 'set modifiable' | endif
+autocmd BufCreate,BufEnter * if IsBufQuickFix(bufnr()) | silent exe 'set modifiable' | endif
 "autocmd BufWinEnter * if IsBufBottomPane(bufnr()) | silent exe 'resize ' . g:bottomPaneHeight | endif
 autocmd BufLeave * if IsBufBottomPane(bufnr()) | let g:bottomPaneHeight = winheight(bufwinnr(bufnr())) | endif
 
@@ -279,13 +302,14 @@ function! TerminalToggle()
     let term_bufnr = GetTerminalBufNr()
 
     if !HideBuf(term_bufnr)
-        call HideOtherPanes(term_bufnr)
+        call HideBottomPanes()
         wincmd b
         if term_bufnr != -1
             silent exe g:bottomPaneHeight . 'split #' . term_bufnr
         else
             silent exe g:bottomPaneHeight . 'split term:///usr/bin/env bash'
             call nvim_buf_set_var(0, "pane", "true")
+            set scrollback=100000
         endif
         set nonumber
         startinsert
@@ -294,6 +318,7 @@ endfunction
 
 nmap <silent> <F5> :call TerminalToggle()<CR>
 tmap <silent> <F5> <C-w>:call TerminalToggle()<CR>
+tmap <silent> <C-DEL> <C-w>:set scrollback=1 \| sleep 100m \| set scrollback=100000<CR>i
 
 "autocmd tableave * call BottomPaneHideOther(-1) 
 
