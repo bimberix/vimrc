@@ -32,8 +32,6 @@ Plug 'mbbill/undotree'
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-dispatch'
 Plug 'airblade/vim-gitgutter'
-"Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
-"Plug 'junegunn/fzf.vim'
 Plug 'preservim/nerdcommenter'
 
 " File browser
@@ -48,10 +46,13 @@ Plug 'itchyny/lightline.vim'
 Plug 'NLKNguyen/papercolor-theme'
 Plug 'lifepillar/vim-gruvbox8'
 
-" Fuzzy find plugins
-Plug 'nvim-lua/plenary.nvim'
-Plug 'nvim-telescope/telescope.nvim', { 'branch': '0.1.x' }
-Plug 'BurntSushi/ripgrep'
+" Search plugins
+"Plug 'nvim-lua/plenary.nvim'
+"Plug 'nvim-telescope/telescope.nvim', { 'branch': '0.1.x' }
+"Plug 'BurntSushi/ripgrep'
+Plug 'mileszs/ack.vim'
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
 
 " Buffers
 Plug 'jlanzarotta/bufexplorer'
@@ -67,5 +68,6 @@ source ~/.config/nvim/core.vim
 source ~/.config/nvim/ui.vim
 source ~/.config/nvim/line.vim
 
-source ~/.config/nvim/find.lua
+"source ~/.config/nvim/find.lua
+source ~/.config/nvim/find.vim
 source ~/.config/nvim/lsp.lua

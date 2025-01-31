@@ -68,9 +68,25 @@ function! HideLeftPanes()
     endfor
 endfunction
 
+function! HideOtherLeftPanes(bufnr)
+    for buf in range(1, bufnr('$'))
+        if IsBufValid(buf) && buf != a:bufnr && IsBufLeftPane(buf) && IsBufVisible(buf)
+            call HideBuf(buf)
+        endif
+    endfor
+endfunction
+
 function! HideBottomPanes()
     for buf in range(1, bufnr('$'))
         if IsBufValid(buf) && IsBufBottomPane(buf) && IsBufVisible(buf)
+            call HideBuf(buf)
+        endif
+    endfor
+endfunction
+
+function! HideOtherBottomPanes(bufnr)
+    for buf in range(1, bufnr('$'))
+        if IsBufValid(buf) && buf != a:bufnr && IsBufBottomPane(buf) && IsBufVisible(buf)
             call HideBuf(buf)
         endif
     endfor
@@ -85,23 +101,30 @@ function! HideNoNameBufs()
 endfunction
 
 function! IsBufLeftPane(bufnr)
-    return IsBufNERDTree(a:bufnr) || IsBufTagbar(a:bufnr) || IsBufUndotree(a:bufnr)
+    return IsBufNERDTree(a:bufnr) || IsBufTagbar(a:bufnr) || IsBufUndotree(a:bufnr) || IsBufGitBlame(a:bufnr)
+endfunction
+
+function! IsFileType(bufnr, filetype)
+    let filetype = getbufvar(a:bufnr, '&filetype', 'ERROR')
+    return filetype == a:filetype
 endfunction
 
 function! IsBufNERDTree(bufnr)
-    let filetype = getbufvar(a:bufnr, '&filetype', 'ERROR')
-    return filetype == 'nerdtree'
+    return IsFileType(a:bufnr, 'nerdtree')
 endfunction
 
 function! IsBufTagbar(bufnr)
-    let filetype = getbufvar(a:bufnr, '&filetype', 'ERROR')
-    return filetype == 'tagbar'
+    return IsFileType(a:bufnr, 'tagbar')
 endfunction
 
 function! IsBufUndotree(bufnr)
-    let filetype = getbufvar(a:bufnr, '&filetype', 'ERROR')
-    return filetype == 'undotree'
+    return IsFileType(a:bufnr, 'undotree')
 endfunction
+
+function! IsBufGitBlame(bufnr)
+    return IsFileType(a:bufnr, 'fugitiveblame')
+endfunction
+
 
 function! LeftPaneNERDTree(findfile)
     let bufnr = -1
@@ -109,19 +132,26 @@ function! LeftPaneNERDTree(findfile)
     if exists('t:NERDTreeBufName')
         let bufnr = GetBufNrByName(t:NERDTreeBufName)
     endif
-    if IsBufVisible(bufnr)
+    if IsBufVisible(bufnr) && a:findfile == 0
         call HideBuf(bufnr)
     else
         call HideLeftPanes()
-        silent exe 'NERDTreeMirror'
+        "silent exe 'NERDTreeMirror'
         if !IsBufVisible(bufnr)
             NERDTreeFocus
         endif
         if a:findfile && filepath != ''
             silent exe 'NERDTreeFind ' . filepath
-            echo filepath
         endif
-        silent exe 'vertical resize ' . g:leftPaneWidth
+        for i in [1, 2, 3]
+            if IsBufNERDTree(bufnr())
+                silent exe 'vertical resize ' . g:leftPaneWidth
+                set winfixbuf
+                break
+            endif
+            echo "Timeout switching NERDTree " . i
+            sleep 100m
+        endfor
     endif
     call lightline#update()
 endfunction
@@ -137,7 +167,15 @@ function! LeftPaneTagbar()
     else
         call HideLeftPanes()
         TagbarOpen fj
-        silent exe 'vertical resize ' . g:leftPaneWidth
+        for i in [1, 2, 3]
+            if IsBufTagbar(bufnr())
+                silent exe 'vertical resize ' . g:leftPaneWidth
+                set winfixbuf
+                break
+            endif
+            echo "Timeout switching Tagbar " . i
+            sleep 100m
+        endfor
     endif
     call lightline#update()
 endfunction
@@ -153,9 +191,17 @@ function! LeftPaneUndotree()
     else
         call HideLeftPanes()
         UndotreeShow
-        silent exe 'vertical resize ' . g:leftPaneWidth
-        wincmd l
-        wincmd h
+        for i in [1, 2, 3]
+            if IsBufUndotree(bufnr())
+                silent exe 'vertical resize ' . g:leftPaneWidth
+                set winfixbuf
+                wincmd l
+                wincmd h
+                break
+            endif
+            echo "Timeout switching Undotree " . i
+            sleep 100m
+        endfor
     endif
 endfunction
 
@@ -167,18 +213,12 @@ tmap <silent> <F3> <C-w>:call LeftPaneTagbar()<CR>
 nmap <silent> <F4> :call LeftPaneUndotree()<CR>
 tmap <silent> <F4> <C-w>:call LeftPaneUndotree()<CR>
 
-autocmd TabLeave * call HideOtherPanes(-1)
-autocmd TabEnter * call HideNoNameBufs()
-
-"autocmd BufEnter * if IsBufLeftPane(bufnr()) | silent exe 'vertical resize ' . g:leftPaneWidth | endif
-autocmd BufLeave * let buf = bufnr() | if IsBufLeftPane(buf) | let g:leftPaneWidth = winwidth(bufwinnr(buf)) | endif
-
 "bottom pane
 
 let g:bottomPaneHeight = 12
 
 function! IsBufBottomPane(bufnr)
-    return IsBufBufExplorer(a:bufnr) || IsBufQuickFix(a:bufnr) || IsBufTerminal(a:bufnr)
+    return IsBufBufExplorer(a:bufnr) || IsBufQuickFix(a:bufnr) || IsBufTerminal(a:bufnr) || IsBufHelp(a:bufnr)
 endfunction
 
 "buflist pane
@@ -233,36 +273,26 @@ function! GetQuickFixBufNr()
     return -1 
 endfunction
 
-function! QuickFixToggle()
+function! QuickFixToggle(diaglist)
     let bufnr = GetQuickFixBufNr()
     if IsBufVisible(bufnr)
         call HideBuf(bufnr)
     else
         call HideBottomPanes()
-        lua vim.diagnostic.setloclist()
-        "for all buffers
-        "lua vim.diagnostic.setqflist()
+        if a:diaglist == 1
+            lua vim.diagnostic.setloclist()
+            "for all buffers
+            "lua vim.diagnostic.setqflist()
+        else
+            silent exe 'copen ' . g:bottomPaneHeight
+        endif
         if IsBufQuickFix(bufnr())
             silent exe 'resize ' . g:bottomPaneHeight
             set modifiable
+            wincmd J
         endif
     endif
-
-
-    "if IsBufVisible(bufnr)
-        "cclose
-    "else
-        "call HideOtherPanes(bufnr)
-        "silent exe 'copen ' . g:bottomPaneHeight
-        "set ma
-        "wincmd J
-    "endif
 endfunction
-
-"autocmd bufcreate * if IsBufQuickFix(bufnr()) | silent exe 'map <silent> <buffer> <CR> :.cc<CR>' | endif
-autocmd BufCreate,BufEnter * if IsBufQuickFix(bufnr()) | silent exe 'set modifiable' | endif
-"autocmd BufWinEnter * if IsBufBottomPane(bufnr()) | silent exe 'resize ' . g:bottomPaneHeight | endif
-autocmd BufLeave * if IsBufBottomPane(bufnr()) | let g:bottomPaneHeight = winheight(bufwinnr(bufnr())) | endif
 
 " Navigate quickfix list with ease
 nnoremap <silent> [q :cprevious<CR>
@@ -280,8 +310,10 @@ command! -nargs=* MyMake call MyMake("<args>")
 nmap <F10> :MyMake<SPACE>
 tmap <F10> <C-w>:MyMake<SPACE>
 
-nmap <silent> <F6> :call QuickFixToggle()<CR>
-tmap <silent> <F6> <C-w>:call QuickFixToggle()<CR>
+nmap <silent> <F6> :call QuickFixToggle(0)<CR>
+tmap <silent> <F6> <C-w>:call QuickFixToggle(0)<CR>
+nmap <silent> <F18> :call QuickFixToggle(1)<CR>
+tmap <silent> <F18> <C-w>:call QuickFixToggle(1)<CR>
 
 "terminal pane
 
@@ -290,11 +322,9 @@ function! IsBufTerminal(buf)
 endfunction
 
 function! GetTerminalBufNr()
-    for buf in range(1, bufnr('$'))
-        if IsBufTerminal(buf) 
-            return buf
-        endif
-    endfor
+    if exists('t:term_bufnr') && IsBufTerminal(t:term_bufnr)
+        return t:term_bufnr
+    endif
     return -1 
 endfunction
 
@@ -310,17 +340,17 @@ function! TerminalToggle()
             silent exe g:bottomPaneHeight . 'split term:///usr/bin/env bash'
             call nvim_buf_set_var(0, "pane", "true")
             set scrollback=100000
+            exe 'let t:term_bufnr = ' . bufnr()
         endif
         set nonumber
         startinsert
+        wincmd J
     endif
 endfunction
 
 nmap <silent> <F5> :call TerminalToggle()<CR>
 tmap <silent> <F5> <C-w>:call TerminalToggle()<CR>
 tmap <silent> <C-DEL> <C-w>:set scrollback=1 \| sleep 100m \| set scrollback=100000<CR>i
-
-"autocmd tableave * call BottomPaneHideOther(-1) 
 
 "terminal tab
 
@@ -333,6 +363,10 @@ endfunction
 
 nmap <silent> <F17> :call OpenTerminal()<CR>
 tmap <silent> <F17> <C-w>:call OpenTerminal()<CR>
+
+function! IsBufHelp(bufnr)
+    return IsFileType(a:bufnr, 'help')
+endfunction
 
 "midnight commander
 
@@ -361,37 +395,53 @@ endfunction
 
 nmap <silent> <F8> :call OpenMC()<CR>
 tmap <silent> <F8> <C-w>:call OpenMC()<CR>
-"terminal escape
-
-"tnoremap <C-C> <C-w>
 
 "tab navigation
-tmap <silent> <C-Left> <C-w>:tabprev<CR>
-tmap <silent> <C-h> <C-w>:tabprev<CR>
-tmap <silent> <C-Right> <C-w>:tabnext<CR>
-tmap <silent> <C-l> <C-w>:tabnext<CR>
-map <C-Left> <C-PageUp>
-map <C-h> <C-PageUp>
-map <C-Right> <C-PageDown>
-map <C-l> <C-PageDown>
-tnoremap <silent> <A-Left> <C-w>N:-tabmove<CR>
-tnoremap <silent> <A-h> <C-w>N:-tabmove<CR>
-tnoremap <silent> <A-Right> <C-w>N:+tabmove<CR>
-tnoremap <silent> <A-l> <C-w>N:+tabmove<CR>
-nnoremap <silent> <A-Left> :-tabmove<CR>
-nnoremap <silent> <A-h> :-tabmove<CR>
-nnoremap <silent> <A-Right> :+tabmove<CR>
-nnoremap <silent> <A-l> :+tabmove<CR>
+map <S-Tab> <C-w>:tabprev<CR>
+"map <C-Tab> <C-w>:tabnext<CR>
+tmap <S-Tab> <C-w>:tabprev<CR>
+"tmap <C-Tab> <C-w>:tabnext<CR>
 
 "window navigation
-tmap <C-Up> <C-w>W
-tmap <C-k> <C-w>W
-tmap <C-Down> <C-w>w
-tmap <C-j> <C-w>w
-map <C-Up> <C-w>W
-map <C-k> <C-w>W
-map <C-Down> <C-w>w
-map <C-j> <C-w>w
+map <C-Up> <C-w>k
+map <C-Down> <C-w>j
+map <C-Left> <C-w>h
+map <C-Right> <C-w>l
+tmap <C-Up> <C-w>k
+tmap <C-Down> <C-w>j
+tmap <C-Left> <C-w>h
+tmap <C-Right> <C-w>l
 
-"terminal scrolls
-"tmap <ScrollWheelUp> <C-w>N
+"window size
+map <S-Up> <C-w>+
+map <S-Down> <C-w>-
+map <S-Left> <C-w><
+map <S-Right> <C-w>>
+tmap <S-Up> <C-w>+
+tmap <S-Down> <C-w>-
+tmap <S-Left> <C-w><
+tmap <S-Right> <C-w>>
+
+augroup ui
+    autocmd! ui
+    "quick fix autocmd
+    "autocmd ui bufcreate * if IsBufQuickFix(bufnr()) | silent exe 'map <silent> <buffer> <CR> :.cc<CR>' | endif
+    autocmd ui BufWinEnter * if IsBufQuickFix(bufnr()) | set modifiable | silent exe 'resize ' . g:bottomPaneHeight | endif
+    autocmd ui BufEnter * if IsBufQuickFix(bufnr()) | call HideOtherBottomPanes(bufnr()) | endif
+
+    "help pane autocmd
+    autocmd ui BufWinEnter * if IsBufHelp(bufnr())  | silent exe 'resize ' . g:bottomPaneHeight | endif
+    autocmd ui BufEnter * if IsBufHelp(bufnr()) | call HideOtherBottomPanes(bufnr()) | endif
+
+    "gitblame pane autocmd
+    autocmd ui BufWinEnter * if IsBufGitBlame(bufnr())  | silent exe 'vertical resize ' . g:leftPaneWidth | set winfixbuf | endif
+    autocmd ui BufEnter * if IsBufGitBlame(bufnr()) | call HideOtherLeftPanes(bufnr()) | endif
+
+    "autocmd ui BufWinEnter * if IsBufBottomPane(bufnr()) | silent exe 'resize ' . g:bottomPaneHeight | endif
+    "autocmd ui TabLeave * call HideOtherPanes(-1)
+    autocmd ui TabEnter * call HideNoNameBufs()
+
+    "autocmd ui BufEnter * if IsBufLeftPane(bufnr()) | silent exe 'vertical resize ' . g:leftPaneWidth | endif
+    autocmd ui BufWinLeave * let buf = bufnr() | if IsBufBottomPane(buf) | let g:bottomPaneHeight = winheight(bufwinnr(buf)) | endif
+    autocmd ui BufWinLeave * let buf = bufnr() | if IsBufLeftPane(buf) | let g:leftPaneWidth = winwidth(bufwinnr(buf)) | endif
+augroup END
