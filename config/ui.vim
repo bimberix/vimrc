@@ -208,6 +208,7 @@ endfunction
 nmap <silent> <F2> :call LeftPaneNERDTree(0)<CR>
 tmap <silent> <F2> <C-w>:call LeftPaneNERDTree(0)<CR>
 nmap <silent> <F14> :call LeftPaneNERDTree(1)<CR>
+nmap <silent> <S-F2> :call LeftPaneNERDTree(1)<CR>
 nmap <silent> <F3> :call LeftPaneTagbar()<CR>
 tmap <silent> <F3> <C-w>:call LeftPaneTagbar()<CR>
 nmap <silent> <F4> :call LeftPaneUndotree()<CR>
@@ -314,6 +315,8 @@ nmap <silent> <F6> :call QuickFixToggle(0)<CR>
 tmap <silent> <F6> <C-w>:call QuickFixToggle(0)<CR>
 nmap <silent> <F18> :call QuickFixToggle(1)<CR>
 tmap <silent> <F18> <C-w>:call QuickFixToggle(1)<CR>
+nmap <silent> <S-F6> :call QuickFixToggle(1)<CR>
+tmap <silent> <S-F6> <C-w>:call QuickFixToggle(1)<CR>
 
 "terminal pane
 
@@ -337,7 +340,7 @@ function! TerminalToggle()
         if term_bufnr != -1
             silent exe g:bottomPaneHeight . 'split #' . term_bufnr
         else
-            silent exe g:bottomPaneHeight . 'split term:///usr/bin/env bash'
+            silent exe g:bottomPaneHeight . 'split term://cmd'
             call nvim_buf_set_var(0, "pane", "true")
             set scrollback=100000
             exe 'let t:term_bufnr = ' . bufnr()
@@ -363,6 +366,8 @@ endfunction
 
 nmap <silent> <F17> :call OpenTerminal()<CR>
 tmap <silent> <F17> <C-w>:call OpenTerminal()<CR>
+nmap <silent> <S-F5> :call OpenTerminal()<CR>
+tmap <silent> <S-F5> <C-w>:call OpenTerminal()<CR>
 
 function! IsBufHelp(bufnr)
     return IsFileType(a:bufnr, 'help')

@@ -1,10 +1,10 @@
 " https://github.com/junegunn/vim-plug
 
-if empty(glob('~/.local/share/nvim/site/autoload/plug.vim'))
-  silent !curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs
-    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
-endif
+"if empty(glob('~/.local/share/nvim/site/autoload/plug.vim'))
+"  silent !curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs
+"    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+"  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+"endif
 
 call plug#begin('~/.vim/plugged')
 " LSP Support
@@ -66,11 +66,11 @@ Plug 'evanleck/vim-svelte', {'branch': 'main'}
 "Plug 'nvim-treesitter/nvim-treesitter'
 call plug#end()
 
-source ~/.config/nvim/custom.lua
-source ~/.config/nvim/core.vim
-source ~/.config/nvim/ui.vim
-source ~/.config/nvim/line.vim
+source ~/AppData/Local/nvim/custom.lua
+source ~/AppData/Local/nvim/core.vim
+source ~/AppData/Local/nvim/ui.vim
+source ~/AppData/Local/nvim/line.vim
 
-"source ~/.config/nvim/find.lua
-source ~/.config/nvim/find.vim
-source ~/.config/nvim/lsp.lua
+"source ~/AppData/Local/nvim/find.lua
+source ~/AppData/Local/nvim/find.vim
+source ~/AppData/Local/nvim/lsp.lua

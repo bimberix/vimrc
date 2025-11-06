@@ -6,7 +6,8 @@ pushd "$(dirname "$(realpath "${0}")")"
 mkdir -p "${HOME}/.config"
 
 rm -rf "${HOME}/.config/nvim"
-ln -s "$(pwd)/config" "${HOME}/.config/nvim"
+#ln -s "$(pwd)/config" "${HOME}/.config/nvim"
+ln -s "$(pwd)/config" "${HOME}/AppData/Local/nvim"
 cp "./config/custom.tmpl" "./config/custom.lua"
 
 #sudo apt install python3-pip shellcheck clangd ctags xsel xclip
