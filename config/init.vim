@@ -60,6 +60,9 @@ Plug 'jlanzarotta/bufexplorer'
 " Syntax
 Plug 'peterhoeg/vim-qml'
 Plug 'kergoth/vim-bitbake'
+Plug 'othree/html5.vim'
+Plug 'pangloss/vim-javascript'
+Plug 'evanleck/vim-svelte', {'branch': 'main'}
 "Plug 'nvim-treesitter/nvim-treesitter'
 call plug#end()
 

@@ -252,9 +252,6 @@ vim.diagnostic.config({
 vim.o.updatetime = 250
 vim.cmd [[autocmd CursorHold * lua vim.diagnostic.open_float(nil, {focus=false})]]
 
--- language servers
-local lspcfg = require "lspconfig"
-
 -- Set up lspconfig.
 --local capabilities = require('cmp_nvim_lsp').default_capabilities()
 local capabilities = vim.lsp.protocol.make_client_capabilities()
@@ -269,7 +266,7 @@ capabilities.textDocument.completion.completionItem.resolveSupport = {
 
 -- https://github.com/python-lsp/python-lsp-server/blob/develop/CONFIGURATION.md
 -- https://jdhao.github.io/2023/07/22/neovim-pylsp-setup/
-lspcfg.pylsp.setup {
+vim.lsp.config("pylsp", {
     settings = {
         pylsp = {
             plugins = {
@@ -294,17 +291,54 @@ lspcfg.pylsp.setup {
         debounce_text_changes = 200,
     },
     capabilities = capabilities,
-}
+})
+vim.lsp.enable('pylsp')
 
-lspcfg.bashls.setup {
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#ts_query_ls
+-- npm install -g typescript typescript-language-server
+vim.lsp.config("ts_ls", {
     capabilities = capabilities
-}
-lspcfg.clangd.setup {
+})
+vim.lsp.enable("ts_ls")
+
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#svelte
+-- npm install -g svelte-language-server
+--
+-- https://github.com/sveltejs/language-tools/tree/master/packages/typescript-plugin#usages
+-- npm install -g typescript-svelte-plugin
+vim.lsp.config("svelte", {
+    capabilities = capabilities
+})
+vim.lsp.enable("svelte")
+
+-- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#tailwindcss
+-- npm install -g @tailwindcss/language-server
+vim.lsp.config("tailwindcss", {
+    filetypes = {"css", "html", "javascript", "typescript", "svelte"},
+    capabilities = capabilities
+})
+vim.lsp.enable("tailwindcss")
+
+-- npm i -g vscode-langservers-extracted
+vim.lsp.config("cssls", {
+  -- You can add more options here if needed
+  filetypes = {"css", "scss", "less", "html"},
+  capabilities = capabilities
+})
+vim.lsp.enable("cssls")
+
+vim.lsp.config("bashls", {
+    capabilities = capabilities
+})
+vim.lsp.enable("bashls")
+
+vim.lsp.config("clangd", {
     capabilities = capabilities,
     cmd = { "clangd", "--enable-config", "--header-insertion=iwyu" }
-}
+})
+vim.lsp.enable("clangd")
 
-lspcfg.rust_analyzer.setup {
+vim.lsp.config("rust_analyzer", {
     settings = {
         ['rust-analyzer'] = {
             diagnostics = {
@@ -323,26 +357,23 @@ lspcfg.rust_analyzer.setup {
                 }
             }
         }
-    }
-}
-
-require 'lspconfig'.cmake.setup {}
-
-lspcfg.gopls.setup {
-    capabilities = capabilities,
-    cmd = { "gopls", "serve" },
-    filetypes = { "go", "gomod" },
-    root_dir = lspcfg.util.root_pattern("go.work", "go.mod", ".git"),
-    settings = {
-        gopls = {
-            analyses = {
-                unusedparams = true,
-            },
-            staticcheck = true,
-        },
     },
-}
-lspcfg.lua_ls.setup {
+    capabilities = capabilities,
+})
+vim.lsp.enable("rust_analyzer")
+
+vim.lsp.config("cmake", {
+    capabilities = capabilities,
+})
+vim.lsp.enable("cmake")
+
+vim.lsp.config("gopls", {
+    capabilities = capabilities,
+})
+vim.lsp.enable("gopls")
+
+
+vim.lsp.config("lua_ls", {
     capabilities = capabilities,
     settings = {
         Lua = {
@@ -368,13 +399,15 @@ lspcfg.lua_ls.setup {
             },
         },
     },
-}
+})
+vim.lsp.enable("lua_ls")
 
-lspcfg.ltex.setup {
+vim.lsp.config("ltex", {
     capabilities = capabilities,
     settings = {
         ltex = {
             language = "en-GB",
         },
     },
-}
+})
+vim.lsp.enable("ltex")
