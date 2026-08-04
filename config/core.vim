@@ -32,38 +32,9 @@ set clipboard^=unnamed,unnamedplus
 
 set makeprg=/usr/bin/env\ bash\ -ic
 
-"set foldmethod=indent
-"set foldlevel=1
-"set foldclose=all
-
-" Added with CoC plugin
-" set fail if hidden is not set.
-"set hidden
-
-" Some servers have issues with backup files, see #649.
-"set nobackup
-"set nowritebackup
-"
-" Give more space for displaying messages.
-"set cmdheight=1
-"
-" Having longer updatetime (default is 4000 ms = 4 s) leads to noticeable
-" delays and poor user experience.
-"set updatetime=300
-"
-" Don't pass messages to |ins-completion-menu|.
-"set shortmess+=c
-
-" Recently vim can merge signcolumn and number column into one
-"set signcolumn=number
-
-"set breakindent
-"set breakindentopt=sbr
-"set cpoptions+=n
-
 " Always delete to black hole register
-nnoremap d "_d
-vnoremap d "_d
+"nnoremap d "_d
+"vmap d "_d
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "KEY MAPPINGS
@@ -78,7 +49,7 @@ map <F12> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans
             \ . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">"<CR>
 
 "editor mappings
-noremap <CR> i<CR><ESC>
+"noremap <CR> i<CR><ESC>
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "ENCODING
 
@@ -91,7 +62,6 @@ set encoding=utf-8
 syntax enable
 "set t_Co=256
 set background=dark
-"colorscheme PaperColor
 colorscheme gruvbox8
 
 let g:gruvbox_plugin_hi_groups = 1

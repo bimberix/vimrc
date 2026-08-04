@@ -45,6 +45,7 @@ let NERDTreeDirArrows = 1
 let g:tagbar_left = 1
 let g:tagbar_width = g:leftPaneWidth
 let g:tagbar_compact = 1
+nmap <C-LeftMouse> <Nop>
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "UNDOTREE
@@ -118,7 +119,7 @@ function! IsBufTagbar(bufnr)
 endfunction
 
 function! IsBufUndotree(bufnr)
-    return IsFileType(a:bufnr, 'undotree')
+    return getbufvar(a:bufnr, 'isUndotreeBuffer', 0) == 1
 endfunction
 
 function! IsBufGitBlame(bufnr)
@@ -207,7 +208,8 @@ endfunction
 
 nmap <silent> <F2> :call LeftPaneNERDTree(0)<CR>
 tmap <silent> <F2> <C-w>:call LeftPaneNERDTree(0)<CR>
-nmap <silent> <F14> :call LeftPaneNERDTree(1)<CR>
+nmap <silent> <S-F2> :call LeftPaneNERDTree(1)<CR>
+nmap <silent> <F14> <S-F2>
 nmap <silent> <F3> :call LeftPaneTagbar()<CR>
 tmap <silent> <F3> <C-w>:call LeftPaneTagbar()<CR>
 nmap <silent> <F4> :call LeftPaneUndotree()<CR>
@@ -221,10 +223,21 @@ function! IsBufBottomPane(bufnr)
     return IsBufBufExplorer(a:bufnr) || IsBufQuickFix(a:bufnr) || IsBufTerminal(a:bufnr) || IsBufHelp(a:bufnr)
 endfunction
 
+function! IsBufHelp(buf)
+    return getbufvar(a:bufnr, '&buftype') == 'help'
+endfunction
+
 "buflist pane
 let g:bufExplorerSplitHorzSize = g:bottomPaneHeight
 let g:bufExplorerDisableDefaultKeyMapping = 1
 let g:bufExplorerDefaultHelp = 0
+
+"called with autocmd at the end of the file
+function! SetupBufExplorer()
+    nmap <nowait> <buffer> <Enter>       <Plug>(BufExplorer_OpenBufferOriginalWindow)
+    nmap <nowait> <buffer> <2-leftmouse> <Plug>(BufExplorer_OpenBufferOriginalWindow)
+    "nmap <nowait> <buffer> <Enter> <Plug>(BufExplorer_OpenBufferOriginalWindow) \| :call BufExplorerToggle()<CR>
+endfunction
 
 function! IsBufBufExplorer(buf)
     return bufname(a:buf) == '[BufExplorer]'
@@ -252,6 +265,7 @@ function! BufExplorerToggle()
             BufExplorerHorizontalSplit
         endif
         wincmd J
+        set winfixbuf
     endif
 endfunction
 
@@ -264,29 +278,60 @@ function! IsBufQuickFix(bufnr)
     return getbufvar(a:bufnr, 'current_syntax') == 'qf'
 endfunction
 
-function! GetQuickFixBufNr()
+function! IsBufQuickFixDiag(bufnr)
+    return getbufvar(a:bufnr, 'pane_type') == 'qfdiag'
+endfunction
+
+function! IsBufQuickFixSearch(bufnr)
+    return getbufvar(a:bufnr, 'pane_type') == 'qfsearch'
+endfunction
+
+function! GetQuickFixDiagBufNr()
     for buf in range(1, bufnr('$'))
-        if IsBufQuickFix(buf) 
+        if IsBufQuickFixDiag(buf) 
             return buf
         endif
     endfor
     return -1 
 endfunction
 
-function! QuickFixToggle(diaglist)
-    let bufnr = GetQuickFixBufNr()
+function! GetQuickFixSearchBufNr()
+    for buf in range(1, bufnr('$'))
+        if IsBufQuickFixSearch(buf) 
+            return buf
+        endif
+    endfor
+    return -1 
+endfunction
+
+function! QuickFixDiagToggle()
+    let bufnr = GetQuickFixDiagBufNr()
     if IsBufVisible(bufnr)
         call HideBuf(bufnr)
     else
         call HideBottomPanes()
-        if a:diaglist == 1
-            lua vim.diagnostic.setloclist()
-            "for all buffers
-            "lua vim.diagnostic.setqflist()
-        else
-            silent exe 'copen ' . g:bottomPaneHeight
+
+        lua vim.diagnostic.setloclist()
+        "for all buffers
+        "lua vim.diagnostic.setqflist()
+        let b:pane_type = 'qfdiag'
+        if IsBufQuickFixDiag(bufnr())
+            silent exe 'resize ' . g:bottomPaneHeight
+            set modifiable
+            wincmd J
         endif
-        if IsBufQuickFix(bufnr())
+    endif
+endfunction
+
+function! QuickFixSearchToggle()
+    let bufnr = GetQuickFixSearchBufNr()
+    if IsBufVisible(bufnr)
+        call HideBuf(bufnr)
+    else
+        call HideBottomPanes()
+        silent exe 'copen ' . g:bottomPaneHeight
+        let b:pane_type = 'qfsearch'
+        if IsBufQuickFixSearch(bufnr())
             silent exe 'resize ' . g:bottomPaneHeight
             set modifiable
             wincmd J
@@ -310,10 +355,19 @@ command! -nargs=* MyMake call MyMake("<args>")
 nmap <F10> :MyMake<SPACE>
 tmap <F10> <C-w>:MyMake<SPACE>
 
-nmap <silent> <F6> :call QuickFixToggle(0)<CR>
-tmap <silent> <F6> <C-w>:call QuickFixToggle(0)<CR>
-nmap <silent> <F18> :call QuickFixToggle(1)<CR>
-tmap <silent> <F18> <C-w>:call QuickFixToggle(1)<CR>
+" do nothing on right click shortcut
+imap <S-F10> <NOP>
+imap <F22> <NOP>
+cmap <S-F10> <NOP>
+cmap <F22> <NOP>
+
+
+nmap <silent> <F6> :call QuickFixSearchToggle()<CR>
+tmap <silent> <F6> <C-w>:call QuickFixSearchToggle()<CR>
+nmap <silent> <S-F6> :call QuickFixDiagToggle()<CR>
+nmap <silent> <F18> <S-F6>
+tmap <silent> <S-F6> <C-w>:call QuickFixDiagToggle()<CR>
+tmap <silent> <F18> <S-F6>
 
 "terminal pane
 
@@ -361,8 +415,10 @@ function! OpenTerminal()
     startinsert
 endfunction
 
-nmap <silent> <F17> :call OpenTerminal()<CR>
-tmap <silent> <F17> <C-w>:call OpenTerminal()<CR>
+nmap <silent> <S-F5> :call OpenTerminal()<CR>
+nmap <silent> <F17> <S-F5>
+tmap <silent> <S-F5> <C-w>:call OpenTerminal()<CR>
+tmap <silent> <F17> <S-F5>
 
 function! IsBufHelp(bufnr)
     return IsFileType(a:bufnr, 'help')
@@ -436,6 +492,9 @@ augroup ui
     "gitblame pane autocmd
     autocmd ui BufWinEnter * if IsBufGitBlame(bufnr())  | silent exe 'vertical resize ' . g:leftPaneWidth | set winfixbuf | endif
     autocmd ui BufEnter * if IsBufGitBlame(bufnr()) | call HideOtherLeftPanes(bufnr()) | endif
+
+    "bufexplorer autocmd
+    autocmd ui User BufExplorer_Started call SetupBufExplorer()
 
     "autocmd ui BufWinEnter * if IsBufBottomPane(bufnr()) | silent exe 'resize ' . g:bottomPaneHeight | endif
     "autocmd ui TabLeave * call HideOtherPanes(-1)

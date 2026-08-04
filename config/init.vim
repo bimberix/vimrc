@@ -10,24 +10,8 @@ call plug#begin('~/.vim/plugged')
 " LSP Support
 Plug 'neovim/nvim-lspconfig'             " Required
 
-" Autocompletion
-Plug 'hrsh7th/nvim-cmp'         " Required
-Plug 'hrsh7th/cmp-nvim-lsp'     " Required
-Plug 'ray-x/lsp_signature.nvim'
-Plug 'windwp/nvim-autopairs'
-
-" Diagnostics
-Plug 'onsails/diaglist.nvim'
-"Plug 'folke/trouble.nvim'
-
-" Snippets
-Plug 'L3MON4D3/LuaSnip', {'tag': 'v2.*', 'do': 'make install_jsregexp'}
-Plug 'saadparwaiz1/cmp_luasnip'
-"Plug 'rafamadriz/friendly-snippets'
-"Plug 'honza/vim-snippets'
-
 " Other
-Plug 'majutsushi/tagbar'
+Plug 'preservim/tagbar'
 Plug 'mbbill/undotree'
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-dispatch'
@@ -43,13 +27,9 @@ Plug 'bimberix/nvim-dirdiff'
 Plug 'itchyny/lightline.vim'
 
 " Themes
-Plug 'NLKNguyen/papercolor-theme'
 Plug 'lifepillar/vim-gruvbox8'
 
 " Search plugins
-"Plug 'nvim-lua/plenary.nvim'
-"Plug 'nvim-telescope/telescope.nvim', { 'branch': '0.1.x' }
-"Plug 'BurntSushi/ripgrep'
 Plug 'mileszs/ack.vim'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
@@ -63,7 +43,6 @@ Plug 'kergoth/vim-bitbake'
 Plug 'othree/html5.vim'
 Plug 'pangloss/vim-javascript'
 Plug 'evanleck/vim-svelte', {'branch': 'main'}
-"Plug 'nvim-treesitter/nvim-treesitter'
 call plug#end()
 
 source ~/.config/nvim/custom.lua
@@ -71,6 +50,5 @@ source ~/.config/nvim/core.vim
 source ~/.config/nvim/ui.vim
 source ~/.config/nvim/line.vim
 
-"source ~/.config/nvim/find.lua
 source ~/.config/nvim/find.vim
 source ~/.config/nvim/lsp.lua
